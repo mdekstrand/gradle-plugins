@@ -24,6 +24,7 @@ class GemInstall extends DefaultTask {
     void installGems() {
         project.logger.info("installing {} gems to {}", gems.size(), gemRoot)
         for (gem in gems) {
+            // TODO Check if the gem is already installed
             project.logger.info("installing gem {}", gem.name)
             def args = ['install', '-i', gemRoot]
             if (gem.version != null) {
