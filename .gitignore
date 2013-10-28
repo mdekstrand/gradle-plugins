@@ -2,3 +2,4 @@
 /.idea_modules
 *.iml
 /build
+/.gradle
