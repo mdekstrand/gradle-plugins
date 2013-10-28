@@ -17,6 +17,7 @@ class JRubyPlugin implements Plugin<Project> {
 
         project.task('installBundler') {
             description "Installs bundler to manage rubygems."
+            outputs.dir project.jruby.bootstrapPath
 
             doLast {
                 project.javaexec {
