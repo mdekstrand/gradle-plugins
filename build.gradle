@@ -9,6 +9,8 @@ group 'net.elehack.gradle'
 jar.baseName = 'gradle-jruby'
 version = '0.1-SNAPSHOT'
 
+ext.isReleaseVersion = !version.endsWith("-SNAPSHOT")
+
 repositories {
     mavenCentral()
     mavenLocal()
@@ -32,7 +34,11 @@ publishing {
                     password project.sonatypePassword
                 }
             }
-            url "https://oss.sonatype.org/content/repositories/snapshots/"
+            if (isReleaseVersion) {
+                url "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            } else {
+                url "https://oss.sonatype.org/content/repositories/snapshots/"
+            }
         }
     }
 }
