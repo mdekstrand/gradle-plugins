@@ -1,6 +1,9 @@
+import org.gradle.api.publish.maven.MavenPublication
+
 apply plugin: 'groovy'
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'maven-publish'
 
 group 'net.elehack.gradle'
 jar.baseName = 'gradle-jruby'
@@ -13,4 +16,23 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username 'ekstrand'
+                if (project.hasProperty('sonatypePassword')) {
+                    password project.sonatypePassword
+                }
+            }
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+    }
 }
