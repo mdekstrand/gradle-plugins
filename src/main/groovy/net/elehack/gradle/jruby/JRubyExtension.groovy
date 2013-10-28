@@ -1,7 +1,9 @@
 package net.elehack.gradle.jruby
 
 /**
- * @author <a href="http://www.grouplens.org">GroupLens Research</a>
+ * Extension object for the JRuby plugin.
+ *
+ * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
 class JRubyExtension {
     String version = '1.7.6'

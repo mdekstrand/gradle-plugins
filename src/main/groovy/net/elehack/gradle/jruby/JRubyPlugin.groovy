@@ -6,7 +6,9 @@ import org.gradle.api.tasks.Delete
 import org.gradle.nativecode.cdt.tasks.GenerateMetadataFileTask
 
 /**
- * @author <a href="http://www.grouplens.org">GroupLens Research</a>
+ * The JRuby plugin.
+ *
+ * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
 class JRubyPlugin implements Plugin<Project> {
     @Override
