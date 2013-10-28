@@ -2,6 +2,8 @@ package net.elehack.gradle.jruby
 
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Delete
+import org.gradle.nativecode.cdt.tasks.GenerateMetadataFileTask
 
 /**
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
@@ -33,6 +35,8 @@ class JRubyPlugin implements Plugin<Project> {
         project.task('installGems', dependsOn: ['installBundler']) {
             description "Installs rubygems with bundler."
             ext.bundler = project.tasks['installBundler']
+            inputs.files 'Gemfile', 'Gemfile.lock'
+            outputs.dir "$project.jruby.gemRoot/jruby"
             doLast {
                 project.javaexec {
                     main 'org.jruby.Main'
@@ -42,6 +46,11 @@ class JRubyPlugin implements Plugin<Project> {
                     args 'install', "--path=${project.file(project.jruby.gemRoot)}"
                 }
             }
+        }
+
+        project.task('cleanJRuby', type: Delete) {
+            description "Deletes Ruby packages."
+            delete project.jruby.gemRoot
         }
     }
 }
