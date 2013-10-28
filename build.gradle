@@ -42,3 +42,7 @@ publishing {
         }
     }
 }
+
+signing {
+    sign configurations.archives
+}
