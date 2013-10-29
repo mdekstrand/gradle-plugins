@@ -4,6 +4,7 @@ apply plugin: 'maven'
 group 'net.elehack.gradle'
 jar.baseName = 'gradle-science'
 version = '0.1-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("-SNAPSHOT")
 
 repositories {
     mavenCentral()
