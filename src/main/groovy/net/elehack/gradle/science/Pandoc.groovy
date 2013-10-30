@@ -1,15 +1,20 @@
 package net.elehack.gradle.science
 
-import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 import org.gradle.api.tasks.incremental.InputFileDetails
 
 /**
  * Task for running Pandoc.  Pandoc may be run on multiple documents.
+ *
+ * The source files are compiled with Pandoc.  Other files added to {@code inputs.files}
+ * are treated as inputs upon which all compiled files depend.  A change to any of them
+ * results in recompiling everything.
+ *
  * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
-class Pandoc extends DefaultTask {
+class Pandoc extends SourceTask {
     List<Doc> documents = []
     Object outputDir = {
         project.buildDir
@@ -99,14 +104,6 @@ class Pandoc extends DefaultTask {
     }
 
     /**
-     * Configure some documents to compile with Pandoc.
-     * @param args The documents to configure (interpreted with project.files).
-     */
-    void sources(Object... args) {
-        inputs.files(args)
-    }
-
-    /**
      * Get the output file for a particular input file.  Looks it up in the documents
      * if specified.
      * @param source
@@ -126,10 +123,28 @@ class Pandoc extends DefaultTask {
     }
 
     @TaskAction
-    void runPandoc(IncrementalTaskInputs inputs) {
-        inputs.outOfDate { InputFileDetails change ->
-            logger.info("compiling {}", change.file)
-            project.mkdir(change.file.parentFile)
+    void runPandoc(IncrementalTaskInputs inc) {
+        def changed = new HashSet<File>()
+        inc.outOfDate { InputFileDetails change ->
+            changed << change.file
+        }
+        def changedNonSource = changed - inputs.sourceFiles.files
+        Set<File> toCompile
+        if (changedNonSource.isEmpty()) {
+            // only source files changed, compile them
+            toCompile = changed
+        } else {
+            // non-source files changed, compile everything
+            logger.info("{} non-source files changed", changedNonSource.size())
+            for (f in changedNonSource) {
+                logger.info("  {}", f)
+            }
+            toCompile = inputs.sourceFiles.files
+        }
+        for (source in toCompile) {
+            logger.info("compiling {}", source)
+            def output = getOutputFile(source)
+            project.mkdir(output.parentFile)
             project.exec {
                 workingDir project.projectDir
                 executable project.science.pandoc
@@ -139,20 +154,20 @@ class Pandoc extends DefaultTask {
                     delegate.args '--standalone'
                 }
                 delegate.args extraArgs
-                delegate.args '-o', getOutputFile(change.file)
-                delegate.args change.file
+                delegate.args '-o', output
+                delegate.args source
             }
         }
     }
 
     public Pandoc() {
-        inputs.files {
+        inputs.source {
             documents.collect {
                 it.input
             }
         }
         outputs.files {
-            inputs.files.files.collect {
+            inputs.sourceFiles.files.collect {
                 getOutputFile(it)
             }
         }
