@@ -92,7 +92,7 @@ class Pandoc extends DefaultTask {
      * @param output The output file name (interpreted with project.file; if null, derived
      * from the source file name).
      */
-    void document(Object src, Map options) {
+    void document(Map options, Object src) {
         logger.debug("adding document {}", src)
         def output = options.get('output')
         documents << new Doc(src, output)
@@ -114,14 +114,15 @@ class Pandoc extends DefaultTask {
      */
     File getOutputFile(File source) {
         Doc doc = documents.find {
-            it.inputFile == source
+            project.file(it.input) == source
         }
-        File out = doc?.outputFile
+        Object out = doc?.output
         if (out == null) {
-            out = new File(project.file(outputDir),
-                           source.name.replaceAll(/(?<=\.)\w+$/, defaultOutputExtension))
+            new File(project.file(outputDir),
+                     source.name.replaceAll(/(?<=\.)\w+$/, defaultOutputExtension))
+        } else {
+            project.file(out)
         }
-        return out
     }
 
     @TaskAction
@@ -174,18 +175,6 @@ class Pandoc extends DefaultTask {
         public Doc(src, dst) {
             input = src
             output = dst
-        }
-
-        File getInputFile() {
-            project.file(input)
-        }
-
-        File getOutputFile() {
-            if (output != null) {
-                project.file(output)
-            } else {
-                null
-            }
         }
     }
 }
