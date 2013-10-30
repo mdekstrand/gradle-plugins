@@ -23,13 +23,14 @@ class GemExec extends DefaultTask {
 
     @TaskAction
     void runBundleScript() {
+        logger.info("running bundler script {}", script)
         project.javaexec {
             main 'org.jruby.Main'
             classpath project.configurations.jruby
-            args project.file(project.jruby.bundlerScript)
-            args 'exec'
-            args script
+            args project.file("$project.jruby.gemRoot/bin/$script")
             args arguments
+            environment.remove('GEM_HOME')
+            environment.remove('JRUBY_HOME')
             environment 'GEM_PATH', project.file(project.jruby.bootstrapPath)
         }
     }

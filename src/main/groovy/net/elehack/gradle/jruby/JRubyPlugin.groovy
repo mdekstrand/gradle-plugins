@@ -41,12 +41,16 @@ class JRubyPlugin implements Plugin<Project> {
             inputs.files 'Gemfile', 'Gemfile.lock'
             outputs.dir "$project.jruby.gemRoot/jruby"
             doLast {
+                def bindir = project.file("$project.jruby.gemRoot/bin")
                 project.javaexec {
                     main 'org.jruby.Main'
                     classpath project.configurations.jruby
+                    environment.remove('GEM_HOME')
+                    environment.remove('JRUBY_HOME')
                     environment 'GEM_PATH', project.file(project.jruby.bootstrapPath)
                     args project.file(project.jruby.bundlerScript)
                     args 'install', "--path=${project.file(project.jruby.gemRoot)}"
+                    args "--binstubs=$bindir"
                 }
             }
         }
