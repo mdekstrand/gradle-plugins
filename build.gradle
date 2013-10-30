@@ -6,6 +6,9 @@ jar.baseName = 'gradle-science'
 version = '0.1-SNAPSHOT'
 ext.isReleaseVersion = !version.endsWith("-SNAPSHOT")
 
+configurations {
+    wagon
+}
 repositories {
     mavenCentral()
     mavenLocal()
@@ -13,4 +16,21 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
+    wagon "org.apache.maven.wagon:wagon-ssh-external:2.2"
+}
+
+task sourceJar(type: Jar) {
+    from 'src'
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourceJar
+}
+
+uploadArchives {
+    repositories.mavenDeployer {
+        configuration = configurations.wagon
+        repository url: 'scpexe://elehack.net/srv/www/maven/'
+    }
 }
