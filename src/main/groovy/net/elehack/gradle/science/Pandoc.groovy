@@ -10,7 +10,10 @@ import org.gradle.api.tasks.incremental.InputFileDetails
  * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
 class Pandoc extends DefaultTask {
-    List<Doc> documents
+    List<Doc> documents = []
+    Object outputDir = {
+        project.buildDir
+    }
     String sourceFormat = 'markdown'
     String outputFormat = 'html'
     List<String> srcFlags = []
@@ -24,6 +27,10 @@ class Pandoc extends DefaultTask {
 
     void outputFormat(String fmt) {
         outputFormat = fmt
+    }
+
+    void outputDir(Object obj) {
+        outputDir = obj
     }
 
     void enableExtensions(String... exts) {
@@ -79,42 +86,61 @@ class Pandoc extends DefaultTask {
     }
 
     /**
-     * Configure a document to compile with Pandoc.
+     * Configure a document to compile with Pandoc.  This takes a single file, and lets
+     * you specify per-document options.
      * @param src The source file (interpreted with project.file).
      * @param output The output file name (interpreted with project.file; if null, derived
      * from the source file name).
      */
-    void document(Object src, Object output = null) {
+    void document(Object src, Map options) {
+        logger.debug("adding document {}", src)
+        def output = options.get('output')
         documents << new Doc(src, output)
+    }
+
+    /**
+     * Configure some documents to compile with Pandoc.
+     * @param args The documents to configure (interpreted with project.files).
+     */
+    void sources(Object... args) {
+        inputs.files(args)
+    }
+
+    /**
+     * Get the output file for a particular input file.  Looks it up in the documents
+     * if specified.
+     * @param source
+     * @return
+     */
+    File getOutputFile(File source) {
+        Doc doc = documents.find {
+            it.inputFile == source
+        }
+        File out = doc?.outputFile
+        if (out == null) {
+            out = new File(project.file(outputDir),
+                           source.name.replaceAll(/(?<=\.)\w+$/, defaultOutputExtension))
+        }
+        return out
     }
 
     @TaskAction
     void runPandoc(IncrementalTaskInputs inputs) {
         inputs.outOfDate { InputFileDetails change ->
-            def doc = documents.find {
-                it.inputFile == change.file
+            logger.info("compiling {}", change.file)
+            project.mkdir(change.file.parentFile)
+            project.exec {
+                workingDir project.projectDir
+                executable project.science.pandoc
+                delegate.args '-t', outputFormatString
+                delegate.args '-f', sourceFormatString
+                if (standalone) {
+                    delegate.args '--standalone'
+                }
+                delegate.args extraArgs
+                delegate.args '-o', getOutputFile(change.file)
+                delegate.args change.file
             }
-            if (doc == null) {
-                logger.warn("cannot find document for {}", change.file)
-            } else {
-                compileDocument(doc)
-            }
-        }
-    }
-
-    void compileDocument(Doc doc) {
-        logger.info("compiling {}", doc.input)
-        project.exec {
-            workingDir project.projectDir
-            executable project.science.pandoc
-            delegate.args '-t', outputFormatString
-            delegate.args '-f', sourceFormatString
-            if (standalone) {
-                delegate.args '--standalone'
-            }
-            delegate.args extraArgs
-            delegate.args '-o', doc.outputFile
-            delegate.args doc.inputFile
         }
     }
 
@@ -125,13 +151,13 @@ class Pandoc extends DefaultTask {
             }
         }
         outputs.files {
-            documents.collect {
-                it.outputFile
+            inputs.files.files.collect {
+                getOutputFile(it)
             }
         }
     }
 
-    private String getDefaultOutputExtension() {
+    String getDefaultOutputExtension() {
         if (outputFormat == "latex") {
             return 'tex';
         } else if (outputFormat.matches(/html|revealjs|dzslides|s3|slideous/)) {
@@ -158,9 +184,7 @@ class Pandoc extends DefaultTask {
             if (output != null) {
                 project.file(output)
             } else {
-                def src = project.file(input)
-                def name = src.name
-                new File(src.parentFile, name.replaceAll(/(?<=\.)\w+/, '') + defaultOutputExtension)
+                null
             }
         }
     }
