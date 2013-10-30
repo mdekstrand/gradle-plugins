@@ -25,6 +25,8 @@ class Pandoc extends SourceTask {
     List<String> outFlags = []
     boolean standalone = false
     List<Object> extraArgs = []
+    def bibliography = null
+    def citationStyle = null
 
     void sourceFormat(String fmt) {
         sourceFormat = fmt
@@ -70,6 +72,14 @@ class Pandoc extends SourceTask {
      */
     void args(Object... args) {
         extraArgs.addAll(args)
+    }
+
+    void bibliography(Object bib) {
+        bibliography = bib
+    }
+
+    void citationStyle(Object csl) {
+        citationStyle = csl
     }
 
     def getSourceFormatString() {
@@ -153,6 +163,12 @@ class Pandoc extends SourceTask {
                 if (standalone) {
                     delegate.args '--standalone'
                 }
+                if (bibliography != null) {
+                    args '--bibliography', project.file(bibliography)
+                }
+                if (citationStyle != null) {
+                    args '--csl', project.file(citationStyle)
+                }
                 delegate.args extraArgs
                 delegate.args '-o', output
                 delegate.args source
@@ -161,6 +177,7 @@ class Pandoc extends SourceTask {
     }
 
     public Pandoc() {
+        inputs.file { bibliography }
         inputs.source {
             documents.collect {
                 it.input
