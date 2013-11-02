@@ -14,100 +14,11 @@ import org.gradle.api.tasks.incremental.InputFileDetails
  *
  * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
-class Pandoc extends SourceTask {
+class Pandoc extends SourceTask implements PandocSpec {
+    @Delegate PandocSpec spec = new PandocSpecImpl()
     List<Doc> documents = []
     Object outputDir = {
         project.buildDir
-    }
-    String sourceFormat = 'markdown'
-    String outputFormat = 'html'
-    List<String> srcFlags = []
-    List<String> outFlags = []
-    boolean standalone = false
-    List<Object> extraArgs = []
-    def bibliography = null
-    def citationStyle = null
-    String filter = null
-    def template = null
-
-    void sourceFormat(String fmt) {
-        sourceFormat = fmt
-    }
-
-    void outputFormat(String fmt) {
-        outputFormat = fmt
-    }
-
-    void outputDir(Object obj) {
-        outputDir = obj
-    }
-
-    void enableExtensions(String... exts) {
-        for (ext in exts) {
-            srcFlags << "+$ext"
-        }
-    }
-    void disableExtensions(String... exts) {
-        for (ext in exts) {
-            srcFlags << "-$ext"
-        }
-    }
-
-    void enableOutputExtensions(String exts) {
-        for (ext in exts) {
-            outFlags << "+$ext"
-        }
-    }
-    void disableOutputExtensions(String... exts) {
-        for (ext in exts) {
-            outFlags << "-$ext"
-        }
-    }
-
-    void standalone(boolean flag) {
-        standalone = flag
-    }
-
-    void template(Object tmpl) {
-        template = tmpl;
-    }
-
-    /**
-     * Add extra arguments to the Pandoc invocation.
-     * @param args The extra arguments to add.
-     */
-    void args(Object... args) {
-        extraArgs.addAll(args)
-    }
-
-    void bibliography(Object bib) {
-        bibliography = bib
-    }
-
-    void citationStyle(Object csl) {
-        citationStyle = csl
-    }
-
-    void filter(String f) {
-        filter = f;
-    }
-
-    def getSourceFormatString() {
-        def bld = new StringBuilder()
-        bld.append(sourceFormat)
-        for (flag in srcFlags) {
-            bld.append(flag)
-        }
-        bld.toString()
-    }
-
-    def getOutputFormatString() {
-        def bld = new StringBuilder()
-        bld.append(outputFormat)
-        for (flag in outFlags) {
-            bld.append(flag)
-        }
-        bld.toString()
     }
 
     /**
@@ -116,11 +27,23 @@ class Pandoc extends SourceTask {
      * @param src The source file (interpreted with project.file).
      * @param output The output file name (interpreted with project.file; if null, derived
      * from the source file name).
+     * @param config A custom configuration closure for this document.
      */
-    void document(Map options, Object src) {
+    void document(Map options, Object src, Closure config = null) {
         logger.debug("adding document {}", src)
-        def output = options.get('output')
-        documents << new Doc(src, output)
+        def output = options?.get('output')
+        documents << new Doc(src, output, config)
+    }
+
+    void document(Object src, Closure config) {
+        document(null, src, config)
+    }
+
+    private Doc lookupDocument(File source) {
+        def doc = documents.find {
+            project.file(it.input) == source
+        }
+        return doc ?: new Doc(source, null, null)
     }
 
     /**
@@ -136,7 +59,7 @@ class Pandoc extends SourceTask {
         Object out = doc?.output
         if (out == null) {
             new File(project.file(outputDir),
-                     source.name.replaceAll(/(?<=\.)\w+$/, defaultOutputExtension))
+                     source.name.replaceAll(/(?<=\.)\w+$/, spec.defaultOutputExtension))
         } else {
             project.file(out)
         }
@@ -163,32 +86,22 @@ class Pandoc extends SourceTask {
         }
         for (source in toCompile) {
             logger.info("compiling {}", source)
-            def output = getOutputFile(source)
-            project.mkdir(output.parentFile)
-            project.exec {
-                workingDir project.projectDir
-                executable project.science.pandoc
-                delegate.args '-t', outputFormatString
-                delegate.args '-f', sourceFormatString
-                if (standalone) {
-                    delegate.args '--standalone'
-                }
-                if (template != null) {
-                    args '--template', project.file(template)
-                }
-                if (bibliography != null) {
-                    args '--bibliography', project.file(bibliography)
-                }
-                if (citationStyle != null) {
-                    args '--csl', project.file(citationStyle)
-                }
-                if (filter != null) {
-                    args '--filter', filter
-                }
-                delegate.args extraArgs
-                delegate.args '-o', output
-                delegate.args source
+            def doc = lookupDocument(source)
+            PandocSpecImpl spec = copySpec()
+            if (doc.config) {
+                doc.config.setDelegate(spec)
+                doc.config.setResolveStrategy(Closure.DELEGATE_FIRST)
+                doc.config.call(source)
             }
+            def output
+            if (doc.output == null) {
+                output = new File(project.file(outputDir),
+                                  source.name.replaceAll(/(?<=\.)\w+$/, spec.defaultOutputExtension))
+            } else {
+                output = project.file(doc.output)
+            }
+            outputs.file output
+            spec.execute(project, source, output)
         }
     }
 
@@ -200,30 +113,22 @@ class Pandoc extends SourceTask {
                 it.input
             }
         }
-        outputs.files {
-            inputs.sourceFiles.files.collect {
-                getOutputFile(it)
-            }
-        }
-    }
-
-    String getDefaultOutputExtension() {
-        if (outputFormat == "latex") {
-            return 'tex';
-        } else if (outputFormat.matches(/html|revealjs|dzslides|s3|slideous/)) {
-            return 'html'
-        } else {
-            throw new RuntimeException("cannot guess extension for format " + outputFormat)
-        }
+//        outputs.files {
+//            inputs.sourceFiles.files.collect {
+//                getOutputFile(it)
+//            }
+//        }
     }
 
     private class Doc {
-        Object input
-        Object output
+        final Object input
+        final Object output
+        final Closure config
 
-        public Doc(src, dst) {
+        public Doc(src, dst, Closure cfg) {
             input = src
             output = dst
+            config = cfg;
         }
     }
 }
