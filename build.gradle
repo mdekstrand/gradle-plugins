@@ -16,6 +16,8 @@ repositories {
 dependencies {
     compile gradleApi()
     compile localGroovy()
+    compile 'com.itextpdf:itextpdf:5.4.4'
+
     wagon "org.apache.maven.wagon:wagon-ssh-external:2.2"
 }
 
