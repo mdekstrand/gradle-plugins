@@ -1,3 +1,5 @@
+apply plugin: 'signing'
+
 ext.isReleaseVersion = !version.endsWith("-SNAPSHOT")
 
 configurations {
@@ -21,6 +23,11 @@ artifacts {
     archives sourceJar, javadocJar
 }
 
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
+}
+
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.wagon
@@ -28,6 +35,9 @@ uploadArchives {
             repository url: deployUrl
         } else {
             repository url: 'scpexe://elehack.net/srv/www/maven/'
+        }
+        beforeDeployment {
+            signing.signPom(it)
         }
     }
 }
