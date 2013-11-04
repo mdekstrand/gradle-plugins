@@ -22,12 +22,17 @@ dependencies {
 }
 
 task sourceJar(type: Jar) {
-    from 'src'
+    from sourceSets.main.allSource
     classifier = 'sources'
 }
 
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
+
 artifacts {
-    archives sourceJar
+    archives sourceJar, javadocJar
 }
 
 uploadArchives {
