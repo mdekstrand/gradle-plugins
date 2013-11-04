@@ -23,17 +23,26 @@ dependencies {
 }
 
 task sourceJar(type: Jar) {
-    from 'src'
+    from sourceSets.main.allSource
     classifier = 'sources'
 }
 
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
+
 artifacts {
-    archives sourceJar
+    archives sourceJar, javadocJar
 }
 
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.wagon
-        repository url: 'scpexe://elehack.net/srv/www/maven/'
+        if (project.hasProperty('deployUrl')) {
+            repository url: deployUrl
+        } else {
+            repository url: 'scpexe://elehack.net/srv/www/maven/'
+        }
     }
 }
