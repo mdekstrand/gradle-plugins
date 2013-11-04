@@ -24,7 +24,7 @@ artifacts {
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") && !project.hasProperty('skipSignatures') }
     sign configurations.archives
 }
 
