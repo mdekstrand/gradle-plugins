@@ -25,10 +25,6 @@ class PandocSpecImpl implements PandocSpec {
         outputFormat = fmt
     }
 
-    void outputDir(Object obj) {
-        outputDir = obj
-    }
-
     void enableExtensions(String... exts) {
         for (ext in exts) {
             srcFlags << "+$ext"

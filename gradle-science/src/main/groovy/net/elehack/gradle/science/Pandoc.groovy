@@ -21,6 +21,10 @@ class Pandoc extends SourceTask implements PandocSpec {
         project.buildDir
     }
 
+    void outputDir(Object obj) {
+        outputDir = obj
+    }
+
     /**
      * Configure a document to compile with Pandoc.  This takes a single file, and lets
      * you specify per-document options.

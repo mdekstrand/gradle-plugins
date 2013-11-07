@@ -43,8 +43,6 @@ public interface PandocSpec {
 
     void outputFormat(String fmt);
 
-    void outputDir(Object obj);
-
     void enableExtensions(String... exts);
     void disableExtensions(String... exts);
 
