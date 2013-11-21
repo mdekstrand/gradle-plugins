@@ -33,6 +33,10 @@ public interface PandocSpec {
     Object getCitationStyle();
     void setCitationStyle(Object csl);
 
+    List<String> getCssStylesheets();
+    void setCssStylesheets(List<String> styles);
+    void css(String... styles);
+
     String getFilter();
     void setFilter(String filt);
 

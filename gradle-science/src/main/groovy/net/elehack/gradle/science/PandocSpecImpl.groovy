@@ -14,6 +14,7 @@ class PandocSpecImpl implements PandocSpec {
     List<Object> extraArgs = []
     def bibliography = null
     def citationStyle = null
+    List<String> cssStylesheets = []
     String filter = null
     def template = null
 
@@ -53,6 +54,10 @@ class PandocSpecImpl implements PandocSpec {
 
     void template(Object tmpl) {
         template = tmpl;
+    }
+
+    void css(String... styles) {
+        cssStylesheets.addAll(styles)
     }
 
     /**
@@ -129,6 +134,9 @@ class PandocSpecImpl implements PandocSpec {
             executable project.science.pandoc
             args '-t', outputFormatString
             args '-f', sourceFormatString
+            for (style in cssStylesheets) {
+                args '-c', style
+            }
             if (standalone) {
                 args '--standalone'
             }
