@@ -1,5 +1,7 @@
 package net.elehack.gradle.science
 
+import org.gradle.api.Project
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
@@ -25,6 +27,14 @@ class Pandoc extends SourceTask implements PandocSpec {
         outputDir = obj
     }
 
+    @OutputFiles
+    def getOutputFiles() {
+        inputs.sourceFiles.files.collect { file ->
+            logger.info "looking up document for {}", file
+            lookupDocument(file).outputFile
+        }
+    }
+
     /**
      * Configure a document to compile with Pandoc.  This takes a single file, and lets
      * you specify per-document options.
@@ -36,18 +46,18 @@ class Pandoc extends SourceTask implements PandocSpec {
     void document(Map options, Object src, Closure config = null) {
         logger.debug("adding document {}", src)
         def output = options?.get('output')
-        documents << new Doc(src, output, config)
+        documents << new Doc(this, src, output, config)
     }
 
     void document(Object src, Closure config) {
         document(null, src, config)
     }
 
-    private Doc lookupDocument(File source) {
+    Doc lookupDocument(File source) {
         def doc = documents.find {
             project.file(it.input) == source
         }
-        return doc ?: new Doc(source, null, null)
+        return doc ?: new Doc(this, source, null, null)
     }
 
     /**
@@ -91,20 +101,8 @@ class Pandoc extends SourceTask implements PandocSpec {
         for (source in toCompile) {
             logger.info("compiling {}", source)
             def doc = lookupDocument(source)
-            PandocSpecImpl spec = copySpec()
-            if (doc.config) {
-                doc.config.setDelegate(spec)
-                doc.config.setResolveStrategy(Closure.DELEGATE_FIRST)
-                doc.config.call(source)
-            }
-            def output
-            if (doc.output == null) {
-                output = new File(project.file(outputDir),
-                                  source.name.replaceAll(/(?<=\.)\w+$/, spec.defaultOutputExtension))
-            } else {
-                output = project.file(doc.output)
-            }
-            outputs.file output
+            PandocSpecImpl spec = doc.pandocSpec
+            def output = doc.getOutputFile(spec)
             spec.execute(project, source, output)
         }
     }
@@ -117,22 +115,49 @@ class Pandoc extends SourceTask implements PandocSpec {
                 it.input
             }
         }
-//        outputs.files {
-//            inputs.sourceFiles.files.collect {
-//                getOutputFile(it)
-//            }
-//        }
     }
 
     private class Doc {
+        final Pandoc pandocTask
         final Object input
         final Object output
         final Closure config
 
-        public Doc(src, dst, Closure cfg) {
+        public Doc(Pandoc task, src, dst, Closure cfg) {
+            pandocTask = task
             input = src
             output = dst
             config = cfg;
+        }
+
+        def getPandocSpec() {
+            def spec = copySpec()
+            if (config) {
+                config.setDelegate(spec)
+                config.setResolveStrategy(Closure.DELEGATE_FIRST)
+                config.call(source)
+            }
+            return spec
+        }
+
+        def getProject() {
+            return pandocTask.project
+        }
+
+        File getOutputFile() {
+            return getOutputFile(pandocSpec)
+        }
+
+        File getOutputFile(PandocSpec spec) {
+            if (output == null) {
+                def srcName = project.file(input).name
+                def outName = srcName.replaceAll(/(?<=\.)\w+$/,
+                                                 spec.defaultOutputExtension)
+                def outputDir = project.file(pandocTask.outputDir)
+                return new File(outputDir, outName)
+            } else {
+                return project.file(output)
+            }
         }
     }
 }
