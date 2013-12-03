@@ -1,6 +1,5 @@
 package net.elehack.gradle.science
 
-import org.gradle.api.Project
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
@@ -58,25 +57,6 @@ class Pandoc extends SourceTask implements PandocSpec {
             project.file(it.input) == source
         }
         return doc ?: new Doc(this, source, null, null)
-    }
-
-    /**
-     * Get the output file for a particular input file.  Looks it up in the documents
-     * if specified.
-     * @param source
-     * @return
-     */
-    File getOutputFile(File source) {
-        Doc doc = documents.find {
-            project.file(it.input) == source
-        }
-        Object out = doc?.output
-        if (out == null) {
-            new File(project.file(outputDir),
-                     source.name.replaceAll(/(?<=\.)\w+$/, spec.defaultOutputExtension))
-        } else {
-            project.file(out)
-        }
     }
 
     @TaskAction
