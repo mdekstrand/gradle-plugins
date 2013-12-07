@@ -1,0 +1,24 @@
+/* Local configuration for cleaning up Gradle logging. */
+class QuietLogger extends BuildAdapter implements TaskExecutionListener {
+    @Override
+    void beforeExecute(Task task) {
+        println "executing $task.name"
+    }
+
+    @Override
+    void afterExecute(Task task, TaskState taskState) {
+    }
+
+    @Override
+    void buildFinished(BuildResult result) {
+        def th = result.failure
+        if (th == null) {
+            println "Build successful."
+        } else {
+            println "Build failed."
+            th.printStackTrace(System.err)
+        }
+    }
+}
+
+useLogger(new QuietLogger())
