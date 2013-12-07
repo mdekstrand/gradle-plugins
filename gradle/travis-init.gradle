@@ -2,7 +2,7 @@
 class QuietLogger extends BuildAdapter implements TaskExecutionListener {
     @Override
     void beforeExecute(Task task) {
-        println "executing $task.name"
+        println "executing $task.path"
     }
 
     @Override
