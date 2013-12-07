@@ -20,7 +20,7 @@ file('src/test/it').eachDir { File testDir ->
         }
     }
     task("test$suffix", type: GradleBuild) {
-        dependsOn "prepareTest$suffix"
+        dependsOn assemble, "prepareTest$suffix"
         dir = file(runDir)
         startParameter.projectProperties = [projectLibDir: file('build/libs')]
         tasks = ['verify']
