@@ -28,13 +28,24 @@ signing {
     sign configurations.archives
 }
 
+if (!project.hasProperty('deployUrl')) {
+    ext.deployUrl = 'https://elehack.net/maven/'
+}
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.wagon
-        if (project.hasProperty('deployUrl')) {
-            repository url: deployUrl
-        } else {
-            repository url: 'scpexe://elehack.net/srv/www/maven/'
+        repository(url: deployUrl) {
+            def user = System.getenv('DEPLOY_USER')
+            if (user == null && project.hasProperty('deployUser')) {
+                user = project.deployUser
+            }
+            def password = System.getenv('DEPLOY_PASSWORD')
+            if (password == null && project.hasProperty('deployPassword')) {
+                password = project.deployPassword
+            }
+            if (user != null && password != null) {
+                authentication(userName: user, password: password)
+            }
         }
         beforeDeployment {
             signing.signPom(it)

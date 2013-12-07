@@ -27,3 +27,5 @@ file('src/test/it').eachDir { File testDir ->
     }
     check.dependsOn "test$suffix"
 }
+
+apply from: "$rootDir/gradle/travis.gradle"

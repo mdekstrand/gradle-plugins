@@ -9,3 +9,5 @@ dependencies {
     compile localGroovy()
     compile 'com.itextpdf:itextpdf:5.4.4'
 }
+
+apply from: "$rootDir/gradle/travis.gradle"

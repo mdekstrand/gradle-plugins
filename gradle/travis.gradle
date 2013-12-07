@@ -1,0 +1,47 @@
+class TravisEnv {
+    boolean getIsActive() {
+        return System.getenv('CI') == 'true'
+    }
+    String getRepository() {
+        return System.getenv('TRAVIS_REPO_SLUG')
+    }
+    String getBranch() {
+        return System.getenv('TRAVIS_BRANCH')
+    }
+    boolean getIsOnMaster() {
+        return repository == 'elehack/gradle-plugins' && branch == 'master'
+    }
+}
+extensions.create('travis', TravisEnv)
+
+task ciPrepare(group: 'CI') {
+    description "Prepares the continuous integration build."
+}
+ciPrepare << {
+    if (travis.isActive) {
+        logger.info "Preparing CI build for {}#{}", travis.repository, travis.branch
+    } else {
+        logger.warn "Travis not active"
+    }
+    def deps = configurations.runtime.resolvedConfiguration.resolvedArtifacts
+    logger.info "fetched {} artifacts", deps.size()
+}
+
+task ciBuild(group: 'CI') {
+    description "Performs continuous integration build tasks."
+}
+ciBuild.dependsOn check
+
+task ciPostBuild(group: 'CI') {
+    description "Performs post-build operations, like uploading artifacts."
+}
+if (travis.isOnMaster) {
+    logger.info "on master, enabling upload"
+    try {
+        ciPostBuild.dependsOn tasks.getByName('uploadArchives')
+    } catch (UnknownTaskException e) {
+        logger.warn 'project {} has no uploadArchives task', name
+    }
+} else {
+    logger.info "not uploading for branch {}", travis.branch
+}
