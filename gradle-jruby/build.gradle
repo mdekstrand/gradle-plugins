@@ -8,3 +8,22 @@ dependencies {
     compile gradleApi()
     compile localGroovy()
 }
+
+file('src/test/it').eachDir { File testDir ->
+    def runDir = "build/tests/$testDir.name"
+    def suffix = testDir.name.capitalize()
+    task("prepareTest$suffix", type: Copy) {
+        from testDir
+        into runDir
+        doFirst {
+            delete "build/tests/$testDir.name"
+        }
+    }
+    task("test$suffix", type: GradleBuild) {
+        dependsOn "prepareTest$suffix"
+        dir = file(runDir)
+        startParameter.projectProperties = [projectLibDir: file('build/libs')]
+        tasks = ['verify']
+    }
+    check.dependsOn "test$suffix"
+}
