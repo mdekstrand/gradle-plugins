@@ -115,7 +115,7 @@ class Pandoc extends SourceTask implements PandocSpec {
             if (config) {
                 config.setDelegate(spec)
                 config.setResolveStrategy(Closure.DELEGATE_FIRST)
-                config.call(source)
+                config.call(input)
             }
             return spec
         }
