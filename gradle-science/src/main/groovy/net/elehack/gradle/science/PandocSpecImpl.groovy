@@ -101,7 +101,7 @@ class PandocSpecImpl implements PandocSpec {
     String getDefaultOutputExtension() {
         if (outputFormat == "latex") {
             return 'tex';
-        } else if (outputFormat.matches(/html|revealjs|dzslides|s3|slideous/)) {
+        } else if (outputFormat.matches(/html5?|revealjs|dzslides|s3|slideous/)) {
             return 'html'
         } else {
             throw new RuntimeException("cannot guess extension for format " + outputFormat)

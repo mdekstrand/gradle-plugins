@@ -1,0 +1,55 @@
+import net.elehack.gradle.science.Pandoc
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.itextpdf:itextpdf:5.4.4'
+        classpath fileTree(projectLibDir) {
+            exclude '*-sources.jar'
+            exclude '*-javadoc.jar'
+        }
+    }
+}
+
+apply plugin: 'science'
+
+task compileToOutputDir(type: Pandoc) {
+    outputDir 'testdir'
+    source 'test.md'
+}
+task verifyOutputDir(dependsOn: compileToOutputDir) << {
+    if (!file("testdir/test.html").exists()) {
+        throw new RuntimeException("file testdir/test.html missing")
+    }
+    if (file("testdir/bar.html").exists()) {
+        throw new RuntimeException("file testdir/bar.html exists!")
+    }
+}
+
+task compileWithModifier(type: Pandoc) {
+    outputDir 'modOut'
+    source projectDir
+    include '*.md'
+    outputFormat 'html5'
+    document('bar.md') {
+        standalone true
+    }
+}
+task verifyModifier(dependsOn: compileWithModifier) << {
+    if (!file("modOut/test.html").exists()) {
+        throw new RuntimeException("file testdir/test.html missing")
+    }
+    if (!file("modOut/bar.html").exists()) {
+        throw new RuntimeException("file testdir/bar.html missing")
+    }
+    if (!file('modOut/bar.html').text.startsWith("<!DOCTYPE html>")) {
+        throw new RuntimeException("file testdir/bar.html not standalone")
+    }
+}
+
+task verify {
+    dependsOn verifyOutputDir
+    dependsOn verifyModifier
+}
