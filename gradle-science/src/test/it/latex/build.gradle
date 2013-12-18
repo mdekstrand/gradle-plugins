@@ -38,7 +38,14 @@ task verifyDocument(dependsOn: buildDocument) << {
 }
 verifyDocument.mustRunAfter verifySetup
 
+task buildAgain(type: LaTeX) {
+    // Make sure we can have a 2nd build without crashing
+    master 'document.tex'
+    dependsOn buildDocument
+}
+
 task verify {
     dependsOn verifySetup
     dependsOn verifyDocument
+    dependsOn buildAgain
 }

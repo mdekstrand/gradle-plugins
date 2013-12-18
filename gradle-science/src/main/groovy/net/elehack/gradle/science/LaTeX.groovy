@@ -2,7 +2,11 @@ package net.elehack.gradle.science
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
+
+import java.nio.file.Paths
 
 class LaTeX extends DefaultTask {
     def master
@@ -21,6 +25,48 @@ class LaTeX extends DefaultTask {
     @InputFile
     File getMasterFile() {
         return project.file(master)
+    }
+
+    def getRecordedFiles(String key) {
+        def fls = getRelatedFile('fls')
+        if (!fls.exists()) return []
+
+        def wantedPat = ~/^$key\s+(?<file>.*)/
+        def pwdPat = ~/^PWD\s+(?<dir>.*)/
+        def files = []
+        def root = workingDir.toPath()
+        for (line in fls.readLines()) {
+            def m = line =~ pwdPat
+            if (m) {
+                root = Paths.get(m.group('dir'))
+                logger.debug "$fls.name: found working directory {}", root
+            } else {
+                m = line =~ wantedPat
+                if (m) {
+                    def path = Paths.get(m.group('file'))
+                    if (!path.isAbsolute()) {
+                        path = root.resolve(path)
+                    }
+                    files << path.toFile()
+                }
+            }
+        }
+        return files
+    }
+
+    @InputFiles
+    def getAdditionalInputs() {
+        getRecordedFiles('INPUT')
+    }
+
+    @OutputFiles
+    def getOutputFiles() {
+        def outputs = getRecordedFiles('OUTPUT')
+        if (outputs.isEmpty()) {
+            return [getRelatedFile('pdf'), getRelatedFile('log'), getRelatedFile('fls')]
+        } else {
+            return outputs
+        }
     }
 
     /**

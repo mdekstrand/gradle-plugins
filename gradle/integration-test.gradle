@@ -4,6 +4,9 @@ file('src/test/it').eachDir { File testDir ->
     task("prepareTest$suffix", type: Sync) {
         from testDir
         into runDir
+        outputs.upToDateWhen {
+            false
+        }
     }
     task("test$suffix", type: GradleBuild) {
         dependsOn assemble, "prepareTest$suffix"
