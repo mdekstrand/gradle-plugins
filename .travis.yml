@@ -2,7 +2,7 @@ language: groovy
 jdk:
 - openjdk7
 install:
- - sudo apt-get install pandoc
+ - sudo apt-get install pandoc texlive-latex-base texlive-luatex
  - ./gradlew -I gradle/travis-init.gradle ciPrepare
 script: ./gradlew -I gradle/travis-init.gradle ciBuild
 after_success:
