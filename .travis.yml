@@ -1,7 +1,9 @@
 language: groovy
 jdk:
 - openjdk7
-install: ./gradlew -I gradle/travis-init.gradle ciPrepare
+install:
+ - sudo apt-get install pandoc
+ - ./gradlew -I gradle/travis-init.gradle ciPrepare
 script: ./gradlew -I gradle/travis-init.gradle ciBuild
 after_success:
 - ./gradlew -I gradle/travis-init.gradle ciPostBuild

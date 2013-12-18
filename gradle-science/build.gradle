@@ -10,23 +10,6 @@ dependencies {
     compile 'com.itextpdf:itextpdf:5.4.4'
 }
 
-file('src/test/it').eachDir { File testDir ->
-    def runDir = "build/tests/$testDir.name"
-    def suffix = testDir.name.capitalize()
-    task("prepareTest$suffix", type: Copy) {
-        from testDir
-        into runDir
-        doFirst {
-            delete "build/tests/$testDir.name"
-        }
-    }
-    task("test$suffix", type: GradleBuild) {
-        dependsOn assemble, "prepareTest$suffix"
-        dir = file(runDir)
-        startParameter.projectProperties = [projectLibDir: file('build/libs')]
-        tasks = ['verify']
-    }
-    check.dependsOn "test$suffix"
-}
+apply from: "$rootDir/gradle/integration-test.gradle"
 
 apply from: "$rootDir/gradle/travis.gradle"

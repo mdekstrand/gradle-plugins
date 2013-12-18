@@ -1,0 +1,15 @@
+file('src/test/it').eachDir { File testDir ->
+    def runDir = "build/tests/$testDir.name"
+    def suffix = testDir.name.capitalize()
+    task("prepareTest$suffix", type: Sync) {
+        from testDir
+        into runDir
+    }
+    task("test$suffix", type: GradleBuild) {
+        dependsOn assemble, "prepareTest$suffix"
+        dir = file(runDir)
+        startParameter.projectProperties = [projectLibDir: file('build/libs')]
+        tasks = ['verify']
+    }
+    check.dependsOn "test$suffix"
+}
