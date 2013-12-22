@@ -1,51 +1,31 @@
 package net.elehack.gradle.science
+/**
+ * TeX process output handler.
+ */
+class TexOutputHandler extends ProcessOutputHandler {
+    private boolean inError = false
+    private def errorPattern = ~/Error:/
+    private def warningPattern = ~/Warning:/
+    private def errLinePattern = ~/^l\.\d+/
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-
-class TexOutputHandler extends Thread {
-    private static final Logger logger = LoggerFactory.getLogger(TexOutputHandler)
-    private PipedOutputStream output
-    private PipedInputStream input
-    private BufferedReader reader
-
-    public TexOutputHandler() {
-        input = new PipedInputStream()
-        output = new PipedOutputStream(input)
-        reader = new BufferedReader(new InputStreamReader(input))
-    }
-
-    public OutputStream getOutputStream() {
-        return output;
+    public TexOutputHandler(String name) {
+        super(name)
     }
 
     @Override
-    void run() {
-        logger.debug "Starting TeX output handling thread"
-        def errorPattern = ~/Error:/
-        def warningPattern = ~/Warning:/
-        def errLinePattern = ~/^l\.\d+/
-        try {
-            String line
-            boolean inError = false
-            while ((line = reader.readLine()) != null) {
-                if (inError) {
-                    logger.error line
-                    if (line =~ errLinePattern) {
-                        inError = false
-                    }
-                } else if (line =~ errorPattern) {
-                    logger.error line
-                    inError = true
-                } else if (line =~ warningPattern) {
-                    logger.warn line
-                } else {
-                    logger.info line
-                }
+    protected void handleLine(String line) {
+        if (inError) {
+            logger.error line
+            if (line =~ errLinePattern) {
+                inError = false
             }
-            logger.debug "TeX output thread shutting down"
-        } finally {
-            reader.close()
+        } else if (line =~ errorPattern) {
+            logger.error line
+            inError = true
+        } else if (line =~ warningPattern) {
+            logger.warn line
+        } else {
+            logger.info line
         }
     }
 }

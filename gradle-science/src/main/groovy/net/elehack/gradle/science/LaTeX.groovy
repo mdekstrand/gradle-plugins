@@ -102,7 +102,7 @@ class LaTeX extends DefaultTask {
     String getDocumentPath() {
         def master = masterFile
         if (master.parentFile == workingDir) {
-            master = master.name
+            master = master.name - '.tex'
         }
         return master
     }
@@ -118,6 +118,9 @@ class LaTeX extends DefaultTask {
 
         int n = 1
         while (results.needsRerun()) {
+            if (results.needsMakeindex()) {
+                runMakeindex()
+            }
             logger.info 're-running LaTeX'
             results = runLaTeX()
             n += 1
@@ -131,9 +134,10 @@ class LaTeX extends DefaultTask {
         logger.info 'running {} {}', project.latex.compiler, documentPath
         sequence << 'latex'
         def run = new TeXResults()
-        run.addCheckedFile(getRelatedFile('aux'))
+        run.addCheckedFile('aux')
+        run.addCheckedFile('idx')
 
-        def handler = new TexOutputHandler()
+        def handler = new TexOutputHandler(project.latex.compiler)
         handler.start()
         project.exec {
             workingDir = this.workingDir
@@ -146,24 +150,58 @@ class LaTeX extends DefaultTask {
         return run
     }
 
-    private static class TeXResults {
+    void runMakeindex() {
+        logger.info 'running {} {}', 'makeindex', documentPath
+        sequence << 'makeindex'
+
+        def handler = new ProcessOutputHandler('makeindex')
+        handler.start()
+        project.exec {
+            workingDir = this.workingDir
+            executable 'makeindex'
+            args documentPath
+            standardOutput = handler.outputStream
+            errorOutput = handler.outputStream
+        }
+    }
+
+    private class TeXResults {
         final List<TeXFile> files = []
 
-        def addCheckedFile(File f) {
-            files << new TeXFile(f)
+        TeXFile getFile(String key) {
+            files.find { tf -> tf.key == key }
+        }
+
+        def addCheckedFile(String key) {
+            addCheckedFile(getRelatedFile(key), key)
+        }
+
+        def addCheckedFile(File f, String key = null) {
+            files << new TeXFile(f, key)
         }
 
         boolean needsRerun() {
             files.any { tf -> tf.changed() }
         }
+
+        boolean needsMakeindex() {
+            def ind = getRelatedFile('ind')
+            def texIdx = getFile('idx')
+            if (texIdx.file.exists()) {
+                return !ind.exists() || texIdx.changed()
+            }
+            return false
+        }
     }
 
     private static class TeXFile {
+        final String key
         final File file
         final byte[] initialDigest
 
-        public TeXFile(File f) {
+        public TeXFile(File f, String k) {
             file = f
+            key = k
             initialDigest = digestFile(f)
         }
 
@@ -172,7 +210,8 @@ class LaTeX extends DefaultTask {
         }
 
         boolean changed() {
-            return !Arrays.equals(initialDigest, finalDigest)
+            byte[] dig = finalDigest
+            return dig != null && !Arrays.equals(initialDigest, finalDigest)
         }
     }
 

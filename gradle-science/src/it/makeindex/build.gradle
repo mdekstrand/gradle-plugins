@@ -37,11 +37,11 @@ task verifyDocument(dependsOn: buildDocument) << {
     }
     assertThat("outputs wrong",
                buildDocument.outputs.files,
-               hasItem(file('document.toc')))
-    assertThat(buildDocument.sequence, equalTo(['latex', 'latex']))
+               hasItem(file('document.idx')))
+    assertThat(buildDocument.sequence, equalTo(['latex', 'makeindex', 'latex']))
     assertThat("inputs wrong",
                buildDocument.inputs.files,
-               hasItem(file('document.toc')))
+               hasItem(file('document.ind')))
 }
 verifyDocument.mustRunAfter verifySetup
 
