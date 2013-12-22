@@ -107,11 +107,16 @@ class LaTeX extends DefaultTask {
         if (master.parentFile == workingDir) {
             master = master.name
         }
+        logger.info 'building document {}', master
+        logger.debug 'using working directory {}', workingDir
+        def handler = new TexOutputHandler()
+        handler.start()
         project.exec {
             workingDir = task.workingDir
             executable project.latex.compiler
-            args '-recorder', '-interaction=errorstopmode'
+            args '-recorder', '-interaction', 'nonstopmode'
             args master
+            standardOutput = handler.outputStream
         }
     }
 }
