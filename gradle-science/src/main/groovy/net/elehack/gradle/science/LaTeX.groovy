@@ -7,9 +7,11 @@ import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Paths
+import java.security.MessageDigest
 
 class LaTeX extends DefaultTask {
     def master
+    List<String> sequence = []
     private def workDir
 
     /**
@@ -97,26 +99,89 @@ class LaTeX extends DefaultTask {
         return new File(master.parentFile, newName)
     }
 
-    @TaskAction
-    void runLatex() {
-        if (master == null) {
-            throw new IllegalStateException("no master document specified")
-        }
-        def task = this
+    String getDocumentPath() {
         def master = masterFile
         if (master.parentFile == workingDir) {
             master = master.name
         }
+        return master
+    }
+
+    @TaskAction
+    void buildDocument() {
+        if (master == null) {
+            throw new IllegalStateException("no master document specified")
+        }
         logger.info 'building document {}', master
         logger.debug 'using working directory {}', workingDir
+        def results = runLaTeX()
+
+        int n = 1
+        while (results.needsRerun()) {
+            logger.info 're-running LaTeX'
+            results = runLaTeX()
+            n += 1
+            if (n >= 5) {
+                logger.warn 'ran LaTeX 5 times, document may be unstable'
+            }
+        }
+    }
+
+    TeXResults runLaTeX() {
+        logger.info 'running {} {}', project.latex.compiler, documentPath
+        sequence << 'latex'
+        def run = new TeXResults()
+        run.addCheckedFile(getRelatedFile('aux'))
+
         def handler = new TexOutputHandler()
         handler.start()
         project.exec {
-            workingDir = task.workingDir
+            workingDir = this.workingDir
             executable project.latex.compiler
             args '-recorder', '-interaction', 'nonstopmode'
-            args master
+            args documentPath
             standardOutput = handler.outputStream
         }
+
+        return run
+    }
+
+    private static class TeXResults {
+        final List<TeXFile> files = []
+
+        def addCheckedFile(File f) {
+            files << new TeXFile(f)
+        }
+
+        boolean needsRerun() {
+            files.any { tf -> tf.changed() }
+        }
+    }
+
+    private static class TeXFile {
+        final File file
+        final byte[] initialDigest
+
+        public TeXFile(File f) {
+            file = f
+            initialDigest = digestFile(f)
+        }
+
+        def byte[] getFinalDigest() {
+            return digestFile(file)
+        }
+
+        boolean changed() {
+            return !Arrays.equals(initialDigest, finalDigest)
+        }
+    }
+
+    private static byte[] digestFile(File f) {
+        if (!f.exists()) {
+            return null
+        }
+        def digest = MessageDigest.getInstance('MD5')
+        digest.update(f.bytes)
+        return digest.digest()
     }
 }
