@@ -8,6 +8,7 @@ import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Paths
 import java.security.MessageDigest
+import java.util.regex.Pattern
 
 class LaTeX extends DefaultTask {
     def master
@@ -116,8 +117,14 @@ class LaTeX extends DefaultTask {
         logger.debug 'using working directory {}', workingDir
         def results = runLaTeX()
 
+        // Only run BibTeX after initial run
+        if (results.needsBibtex()) {
+            runBibtex()
+        }
+
         int n = 1
         while (results.needsRerun()) {
+            // index positions may have been changed by TeX run, regenerate
             if (results.needsMakeindex()) {
                 runMakeindex()
             }
@@ -126,6 +133,7 @@ class LaTeX extends DefaultTask {
             n += 1
             if (n >= 5) {
                 logger.warn 'ran LaTeX 5 times, document may be unstable'
+                break
             }
         }
     }
@@ -165,6 +173,21 @@ class LaTeX extends DefaultTask {
         }
     }
 
+    void runBibtex() {
+        logger.info 'running {} {}', 'bibtex', documentPath
+        sequence << 'bibtex'
+
+        def handler = new ProcessOutputHandler('bibtex')
+        handler.start()
+        project.exec {
+            workingDir = this.workingDir
+            executable 'bibtex'
+            args documentPath
+            standardOutput = handler.outputStream
+            errorOutput = handler.outputStream
+        }
+    }
+
     private class TeXResults {
         final List<TeXFile> files = []
 
@@ -192,35 +215,62 @@ class LaTeX extends DefaultTask {
             }
             return false
         }
+
+        boolean needsBibtex() {
+            def aux = getRelatedFile('aux')
+            def bbl = getRelatedFile('bbl')
+            if (!aux.exists()) {
+                return false
+            }
+            def bibs = []
+            aux.eachLine {
+                def m = it =~ /^\\bibdata\{(.+)\}/
+                if (m) {
+                    bibs << new File(getWorkingDir(), "${m.group(1)}.bib")
+                }
+            }
+            if (!bibs.empty && !bbl.exists()) {
+                return true
+            } else if (bibs.any({f -> f.lastModified() > bbl.lastModified()})) {
+                return true
+            } else if (getFile('aux').changed(~/^\\citation\{/)) {
+                return true
+            } else {
+                return false
+            }
+        }
     }
 
     private static class TeXFile {
         final String key
         final File file
-        final byte[] initialDigest
+        final List<String> initialLines
 
         public TeXFile(File f, String k) {
             file = f
             key = k
-            initialDigest = digestFile(f)
+            initialLines = f.exists() ? f.readLines() : null
         }
 
-        def byte[] getFinalDigest() {
-            return digestFile(file)
+        def List<String> getLines() {
+            try {
+                file.readLines()
+            } catch (FileNotFoundException e) {
+                null
+            }
         }
 
         boolean changed() {
-            byte[] dig = finalDigest
-            return dig != null && !Arrays.equals(initialDigest, finalDigest)
+            return initialLines != lines
         }
-    }
 
-    private static byte[] digestFile(File f) {
-        if (!f.exists()) {
-            return null
+        /**
+         * Detect whether the lines matched by the filter have changed. Uses List.grep.
+         * @param filter A closure to filter the lines.
+         * @return {@code true} if the list of lines maching the filter have changed.
+         */
+        boolean changed(Object filter) {
+            return initialLines.grep(filter) != lines.grep(filter)
         }
-        def digest = MessageDigest.getInstance('MD5')
-        digest.update(f.bytes)
-        return digest.digest()
     }
 }
