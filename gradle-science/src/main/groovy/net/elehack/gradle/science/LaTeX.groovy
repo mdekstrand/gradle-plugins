@@ -7,11 +7,9 @@ import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.TaskAction
 
 import java.nio.file.Paths
-import java.security.MessageDigest
-import java.util.regex.Pattern
 
 class LaTeX extends DefaultTask {
-    def master
+    String master
     List<String> sequence = []
     private def workDir
 
@@ -21,13 +19,26 @@ class LaTeX extends DefaultTask {
      *
      * @param doc The master document.  Will be interpreted with {@code project.file(doc)}.
      */
-    void master(doc) {
+    void master(String doc) {
         master = doc
     }
 
     @InputFile
     File getMasterFile() {
-        return project.file(master)
+        def name = master
+        if (!(name =~ /\.\w+$/)) {
+            name += '.tex'
+        }
+        return new File(workingDir, name)
+    }
+
+    String getDocumentName() {
+        def match = master =~ /(.*)\.(tex|ltx)/
+        if (match) {
+            return match.group(1)
+        } else {
+            return master
+        }
     }
 
     def getRecordedFiles(String key) {
@@ -87,9 +98,9 @@ class LaTeX extends DefaultTask {
 
     File getWorkingDir() {
         if (workDir == null) {
-            return project.file(master).parentFile
+            return project.projectDir
         } else {
-            return project.file(workDir)
+            workDir
         }
     }
 
@@ -100,12 +111,8 @@ class LaTeX extends DefaultTask {
         return new File(master.parentFile, newName)
     }
 
-    String getDocumentPath() {
-        def master = masterFile
-        if (master.parentFile == workingDir) {
-            master = master.name - '.tex'
-        }
-        return master
+    String getLatexCompiler() {
+        project.extensions.getByName('latex').compiler
     }
 
     @TaskAction
@@ -139,19 +146,19 @@ class LaTeX extends DefaultTask {
     }
 
     TeXResults runLaTeX() {
-        logger.info 'running {} {}', project.latex.compiler, documentPath
+        logger.info 'running {} {}', latexCompiler, master
         sequence << 'latex'
         def run = new TeXResults()
         run.addCheckedFile('aux')
         run.addCheckedFile('idx')
 
-        def handler = new TexOutputHandler(project.latex.compiler)
+        def handler = new TexOutputHandler(latexCompiler)
         handler.start()
         project.exec {
             workingDir = this.workingDir
-            executable project.latex.compiler
+            executable latexCompiler
             args '-recorder', '-interaction', 'nonstopmode'
-            args documentPath
+            args documentName
             standardOutput = handler.outputStream
         }
 
@@ -159,7 +166,7 @@ class LaTeX extends DefaultTask {
     }
 
     void runMakeindex() {
-        logger.info 'running {} {}', 'makeindex', documentPath
+        logger.info 'running {} {}', 'makeindex', master
         sequence << 'makeindex'
 
         def handler = new ProcessOutputHandler('makeindex')
@@ -167,14 +174,14 @@ class LaTeX extends DefaultTask {
         project.exec {
             workingDir = this.workingDir
             executable 'makeindex'
-            args documentPath
+            args documentName
             standardOutput = handler.outputStream
             errorOutput = handler.outputStream
         }
     }
 
     void runBibtex() {
-        logger.info 'running {} {}', 'bibtex', documentPath
+        logger.info 'running {} {}', 'bibtex', master
         sequence << 'bibtex'
 
         def handler = new ProcessOutputHandler('bibtex')
@@ -182,7 +189,7 @@ class LaTeX extends DefaultTask {
         project.exec {
             workingDir = this.workingDir
             executable 'bibtex'
-            args documentPath
+            args documentName
             standardOutput = handler.outputStream
             errorOutput = handler.outputStream
         }
