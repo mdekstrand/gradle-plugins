@@ -143,17 +143,22 @@ class LaTeX extends DefaultTask {
                 break
             }
         }
+
+        results.output.printMessages()
     }
 
     TeXResults runLaTeX() {
         logger.info 'running {} {}', latexCompiler, master
         sequence << 'latex'
-        def run = new TeXResults()
+
+        def handler = new TexOutputHandler(latexCompiler)
+
+        def run = new TeXResults(handler)
         run.addCheckedFile('aux')
         run.addCheckedFile('idx')
 
-        def handler = new TexOutputHandler(latexCompiler)
         handler.start()
+
         project.exec {
             workingDir = this.workingDir
             executable latexCompiler
@@ -202,6 +207,11 @@ class LaTeX extends DefaultTask {
 
     private class TeXResults {
         final List<TeXFile> files = []
+        TexOutputHandler output
+
+        TeXResults(TexOutputHandler oh) {
+            output = oh
+        }
 
         TeXFile getFile(String key) {
             files.find { tf -> tf.key == key }
