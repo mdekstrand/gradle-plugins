@@ -25,6 +25,16 @@ class ProcessOutputHandler extends Thread {
         reader = new BufferedReader(new InputStreamReader(input))
     }
 
+    /**
+     * Construct a new logger.
+     *
+     * @param name A name to identify the process (used to construct the logger name).
+     * @param handle Closure that handles each line.
+     */
+    public static ProcessOutputHandler create(String name, Closure lh) {
+        return new ConfigurableOutputHandler(name, lh)
+    }
+
     public OutputStream getOutputStream() {
         return output;
     }

@@ -184,14 +184,19 @@ class LaTeX extends DefaultTask {
         logger.info 'running {} {}', 'bibtex', master
         sequence << 'bibtex'
 
-        def handler = new ProcessOutputHandler('bibtex')
+        def handler = ProcessOutputHandler.create('bibtex') { line, logger ->
+            if (line =~ /^Warning--/) {
+                logger.warn line
+            } else {
+                logger.info line
+            }
+        }
         handler.start()
         project.exec {
             workingDir = this.workingDir
             executable 'bibtex'
             args documentName
             standardOutput = handler.outputStream
-            errorOutput = handler.outputStream
         }
     }
 
