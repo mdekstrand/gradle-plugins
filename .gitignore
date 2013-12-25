@@ -3,3 +3,4 @@ build
 /.idea
 /.idea_modules
 /.gradle
+gradle.properties
