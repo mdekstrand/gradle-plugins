@@ -70,7 +70,9 @@ class LaTeX extends DefaultTask {
 
     @InputFiles
     def getAdditionalInputs() {
-        getRecordedFiles('INPUT')
+        def files = getRecordedFiles('INPUT')
+        files.removeAll(outputFiles)
+        return files
     }
 
     @OutputFiles

@@ -39,9 +39,6 @@ task verifyDocument(dependsOn: buildDocument) << {
                buildDocument.outputs.files,
                hasItem(file('document.toc')))
     assertThat(buildDocument.sequence, equalTo(['latex', 'latex']))
-    assertThat("inputs wrong",
-               buildDocument.inputs.files,
-               hasItem(file('document.toc')))
 }
 verifyDocument.mustRunAfter verifySetup
 
