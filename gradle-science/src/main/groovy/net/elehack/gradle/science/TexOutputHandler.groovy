@@ -8,7 +8,7 @@ import org.slf4j.Logger
  */
 class TexOutputHandler extends ProcessOutputHandler {
     private boolean inError = false
-    private def errorPattern = ~/Error:/
+    private def errorPattern = ~/^!/
     private def warningPattern = ~/Warning:/
     private def errLinePattern = ~/^l\.\d+/
     private List<Message> messages = new ArrayList<>()
