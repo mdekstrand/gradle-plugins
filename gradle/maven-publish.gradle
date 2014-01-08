@@ -30,7 +30,7 @@ signing {
 }
 
 if (!project.hasProperty('deployUrl')) {
-    ext.deployUrl = 'webdav://elehack.net/maven/'
+    ext.deployUrl = 'davs://elehack.net/maven/'
 }
 uploadArchives {
     repositories.mavenDeployer {
