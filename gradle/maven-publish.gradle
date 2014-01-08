@@ -6,7 +6,8 @@ configurations {
     wagon
 }
 dependencies {
-    wagon 'org.apache.maven.wagon:wagon-ssh-external:2.2'
+    wagon 'org.apache.maven.wagon:wagon-ssh-external:2.6'
+    wagon 'org.apache.maven.wagon:wagon-webdav-jackrabbit:2.6'
 }
 
 task sourceJar(type: Jar) {
@@ -29,7 +30,7 @@ signing {
 }
 
 if (!project.hasProperty('deployUrl')) {
-    ext.deployUrl = 'https://elehack.net/maven/'
+    ext.deployUrl = 'webdav://elehack.net/maven/'
 }
 uploadArchives {
     repositories.mavenDeployer {
