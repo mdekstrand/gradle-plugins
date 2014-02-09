@@ -1,0 +1,39 @@
+import net.elehack.gradle.science.LinkTree
+
+import java.nio.file.Files
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath fileTree(projectLibDir) {
+            exclude '*-sources.jar'
+            exclude '*-javadoc.jar'
+        }
+    }
+}
+
+apply plugin: 'science'
+
+task setup(type: Copy) {
+    from "$testedProjectDir/src/main/groovy"
+    into 'src'
+}
+
+task linkTree(type: LinkTree, dependsOn: setup) {
+    from 'src'
+    into "$buildDir/src"
+}
+
+task verify(dependsOn: linkTree) {
+    doLast {
+        if (!file("$buildDir/src/net/elehack/gradle/science/LinkTree.java").exists()) {
+            throw new RuntimeException("expected file doesn't exist")
+        }
+        if (!Files.isSameFile(file("src/net/elehack/gradle/science/LinkTree.java").toPath(),
+                              file("$buildDir/src/net/elehack/gradle/science/LinkTree.java").toPath())) {
+            throw new RuntimeException("files not hard linked")
+        }
+    }
+}
