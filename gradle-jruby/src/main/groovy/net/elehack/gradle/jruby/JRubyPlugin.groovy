@@ -3,7 +3,8 @@ package net.elehack.gradle.jruby
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.Delete
-import org.gradle.nativecode.cdt.tasks.GenerateMetadataFileTask
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * The JRuby plugin.
@@ -11,6 +12,8 @@ import org.gradle.nativecode.cdt.tasks.GenerateMetadataFileTask
  * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
 class JRubyPlugin implements Plugin<Project> {
+    static Logger logger = LoggerFactory.getLogger(JRubyPlugin)
+
     @Override
     void apply(Project project) {
         project.configurations.create('jruby')
@@ -22,6 +25,7 @@ class JRubyPlugin implements Plugin<Project> {
             outputs.dir project.jruby.bootstrapPath
 
             doLast {
+                logger.info 'installing Bundler'
                 project.javaexec {
                     main 'org.jruby.Main'
                     classpath project.configurations.jruby
@@ -42,6 +46,7 @@ class JRubyPlugin implements Plugin<Project> {
             outputs.dir "$project.jruby.gemRoot/jruby"
             doLast {
                 def bindir = project.file("$project.jruby.gemRoot/bin")
+                logger.info 'installing Ruby gems with {}', project.jruby.bundlerScript
                 project.javaexec {
                     main 'org.jruby.Main'
                     classpath project.configurations.jruby
