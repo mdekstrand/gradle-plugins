@@ -1,6 +1,7 @@
 package net.elehack.gradle.science
 
 import org.gradle.api.DefaultTask
+import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
 /**
@@ -21,13 +22,22 @@ class Rscript extends DefaultTask {
         project.exec {
             workingDir project.file(workDir)
             executable effectiveExecutable
-            args project.file(script)
+            args scriptFile
             args scriptArgs
         }
     }
 
+    def script(s) {
+        script = s
+    }
+
     def args(Object... args) {
         scriptArgs.addAll(args)
+    }
+
+    @InputFile
+    File getScriptFile() {
+        return project.file(script)
     }
 
     def getEffectiveExecutable() {
