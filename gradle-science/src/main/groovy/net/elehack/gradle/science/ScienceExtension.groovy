@@ -10,4 +10,9 @@ public class ScienceExtension {
      * The Pandoc executable.
      */
     String pandoc = 'pandoc'
+
+    /**
+     * The Rscript executable.
+     */
+    String rscript = 'Rscript'
 }
