@@ -42,9 +42,6 @@ class ProcessOutputHandler extends Thread {
     @Override
     void run() {
         logger.debug "Starting TeX output handling thread"
-        def errorPattern = ~/Error:/
-        def warningPattern = ~/Warning:/
-        def errLinePattern = ~/^l\.\d+/
         try {
             String line
             while ((line = reader.readLine()) != null) {
