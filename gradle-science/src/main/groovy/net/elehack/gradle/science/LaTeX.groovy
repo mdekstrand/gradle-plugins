@@ -1,10 +1,8 @@
 package net.elehack.gradle.science
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputFiles
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
+import org.gradle.process.ExecResult
 
 import java.nio.file.Paths
 
@@ -129,10 +127,11 @@ class LaTeX extends DefaultTask {
         // Only run BibTeX after initial run
         if (results.needsBibtex()) {
             runBibtex()
+            results = runLaTeX()
         }
 
         int n = 1
-        while (results.needsRerun()) {
+        while (!results.failed() && results.needsRerun()) {
             // index positions may have been changed by TeX run, regenerate
             if (results.needsMakeindex()) {
                 runMakeindex()
@@ -147,6 +146,10 @@ class LaTeX extends DefaultTask {
         }
 
         results.output.printMessages()
+        if (results.failed()) {
+            logger.error 'LaTeX failed with code {}', results.execResult.exitValue
+            throw new TaskExecutionException("failed LaTeX run")
+        }
     }
 
     TeXResults runLaTeX() {
@@ -159,15 +162,18 @@ class LaTeX extends DefaultTask {
         run.addCheckedFile('aux')
         run.addCheckedFile('idx')
 
+        logger.debug 'starting output handler thread'
         handler.start()
 
-        project.exec {
+        run.execResult = project.exec {
             workingDir = this.workingDir
             executable latexCompiler
             args '-recorder', '-interaction', 'nonstopmode'
             args documentName
             standardOutput = handler.outputStream
+            ignoreExitValue = true
         }
+        logger.info 'latex exited with code {}', run.execResult.exitValue
 
         return run
     }
@@ -210,6 +216,7 @@ class LaTeX extends DefaultTask {
     private class TeXResults {
         final List<TeXFile> files = []
         TexOutputHandler output
+        ExecResult execResult
 
         TeXResults(TexOutputHandler oh) {
             output = oh
@@ -225,6 +232,13 @@ class LaTeX extends DefaultTask {
 
         def addCheckedFile(File f, String key = null) {
             files << new TeXFile(f, key)
+        }
+
+        boolean failed() {
+            if (execResult == null) {
+                throw new IllegalStateException("TeX not run")
+            }
+            return execResult.exitValue != 0
         }
 
         boolean needsRerun() {
