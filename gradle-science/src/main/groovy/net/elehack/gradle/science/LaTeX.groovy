@@ -148,7 +148,7 @@ class LaTeX extends DefaultTask {
         results.output.printMessages()
         if (results.failed()) {
             logger.error 'LaTeX failed with code {}', results.execResult.exitValue
-            throw new TaskExecutionException("failed LaTeX run")
+            throw new RuntimeException("failed LaTeX run")
         }
     }
 
