@@ -9,6 +9,7 @@ import java.nio.file.Paths
 class LaTeX extends DefaultTask {
     String master
     List<String> sequence = []
+    List latexArgs = []
     private def workDir
 
     /**
@@ -28,6 +29,10 @@ class LaTeX extends DefaultTask {
             name += '.tex'
         }
         return new File(workingDir, name)
+    }
+
+    void latexArgs(Object... args) {
+        latexArgs.addAll(args)
     }
 
     String getDocumentName() {
@@ -169,6 +174,7 @@ class LaTeX extends DefaultTask {
             workingDir = this.workingDir
             executable latexCompiler
             args '-recorder', '-interaction', 'nonstopmode'
+            args latexArgs
             args documentName
             standardOutput = handler.outputStream
             ignoreExitValue = true
