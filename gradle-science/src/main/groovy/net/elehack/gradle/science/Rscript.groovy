@@ -1,6 +1,6 @@
 package net.elehack.gradle.science
 
-import org.gradle.api.DefaultTask
+import org.gradle.api.internal.ConventionTask
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.TaskAction
 
@@ -9,8 +9,8 @@ import org.gradle.api.tasks.TaskAction
  *
  * @author <a href="http://www.grouplens.org">GroupLens Research</a>
  */
-class Rscript extends DefaultTask {
-    String rscriptExecutable = null
+class Rscript extends ConventionTask {
+    String rscriptExecutable
     def script = null
     List<Object> scriptArgs = []
     Object workDir = {
@@ -21,7 +21,7 @@ class Rscript extends DefaultTask {
     void executeRScript() {
         project.exec {
             workingDir project.file(workDir)
-            executable effectiveExecutable
+            executable getRscriptExecutable()
             args scriptFile
             args scriptArgs
         }
@@ -38,9 +38,5 @@ class Rscript extends DefaultTask {
     @InputFile
     File getScriptFile() {
         return project.file(script)
-    }
-
-    def getEffectiveExecutable() {
-        return rscriptExecutable ?: project.extensions.getByName('science')?.rscript
     }
 }

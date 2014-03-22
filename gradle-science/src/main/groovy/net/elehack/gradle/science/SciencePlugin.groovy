@@ -17,6 +17,11 @@ class SciencePlugin implements Plugin<Project> {
         if (project.hasProperty('latex.compiler')) {
             project.latex.compiler = project.getProperty('latex.compiler')
         }
+        project.tasks.withType(Rscript.class).all { task ->
+            task.conventionMapping.rscriptExecutable = {
+                project.extensions.getByName('science')?.rscript ?: 'Rscript'
+            }
+        }
         project.tasks.withType(LaTeX.class).all { task ->
             logger.info 'configuring task {} for science', task
             task.conventionMapping.latexCompiler = {
