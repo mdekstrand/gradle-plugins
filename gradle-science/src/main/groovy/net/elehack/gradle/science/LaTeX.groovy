@@ -3,14 +3,16 @@ package net.elehack.gradle.science
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.*
 import org.gradle.process.ExecResult
+import org.gradle.api.internal.ConventionTask
 
 import java.nio.file.Paths
 
-class LaTeX extends DefaultTask {
+class LaTeX extends ConventionTask {
     String master
     List<String> sequence = []
     List latexArgs = []
     private def workDir
+    String latexCompiler
 
     /**
      * Specify the master document.  Unless a separate working directory is specified, LaTeX will
@@ -116,10 +118,6 @@ class LaTeX extends DefaultTask {
         return new File(master.parentFile, newName)
     }
 
-    String getLatexCompiler() {
-        project.extensions.getByName('latex').compiler
-    }
-
     @TaskAction
     void buildDocument() {
         if (master == null) {
@@ -158,10 +156,11 @@ class LaTeX extends DefaultTask {
     }
 
     TeXResults runLaTeX() {
-        logger.info 'running {} {}', latexCompiler, master
+        def compiler = getLatexCompiler()
+        logger.info 'running {} {}', compiler, master
         sequence << 'latex'
 
-        def handler = new TexOutputHandler(latexCompiler)
+        def handler = new TexOutputHandler(compiler)
 
         def run = new TeXResults(handler)
         run.addCheckedFile('aux')
@@ -172,7 +171,7 @@ class LaTeX extends DefaultTask {
 
         run.execResult = project.exec {
             workingDir = this.workingDir
-            executable latexCompiler
+            executable compiler
             args '-recorder', '-interaction', 'nonstopmode'
             args latexArgs
             args documentName

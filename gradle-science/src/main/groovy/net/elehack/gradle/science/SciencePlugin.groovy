@@ -17,5 +17,12 @@ class SciencePlugin implements Plugin<Project> {
         if (project.hasProperty('latex.compiler')) {
             project.latex.compiler = project.getProperty('latex.compiler')
         }
+        project.tasks.withType(LaTeX.class).all { task ->
+            logger.info 'configuring task {} for science', task
+            task.conventionMapping.latexCompiler = {
+                def ext = project.extensions.getByName('latex')
+                ext?.compiler ?: LaTeXExtension.DEFAULT_COMPILER
+            }
+        }
     }
 }
