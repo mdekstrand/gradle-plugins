@@ -7,6 +7,8 @@ class LaTeXExtension {
      */
     String compiler = DEFAULT_COMPILER
 
+    ErrorOutputMode outputMode = ErrorOutputMode.DEFAULT
+
     /**
      * Set the LaTeX compiler.
      * @param comp
@@ -14,5 +16,13 @@ class LaTeXExtension {
      */
     def compiler(String comp) {
         compiler = comp
+    }
+
+    def outputMode(ErrorOutputMode mode) {
+        outputMode = mode
+    }
+
+    def outputMode(String mode) {
+        outputMode = ErrorOutputMode.valueOf(mode.toUpperCase())
     }
 }

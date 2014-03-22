@@ -17,6 +17,11 @@ class SciencePlugin implements Plugin<Project> {
         if (project.hasProperty('latex.compiler')) {
             project.latex.compiler = project.getProperty('latex.compiler')
         }
+        if (project.hasProperty('latex.outputMode')) {
+            project.latex {
+                outputMode project.getProperty('latex.outputMode')
+            }
+        }
         project.tasks.withType(Rscript.class).all { task ->
             task.conventionMapping.rscriptExecutable = {
                 project.extensions.getByName('science')?.rscript ?: 'Rscript'
@@ -24,6 +29,10 @@ class SciencePlugin implements Plugin<Project> {
         }
         project.tasks.withType(LaTeX.class).all { task ->
             logger.info 'configuring task {} for science', task
+            task.conventionMapping.outputMode = {
+                def ext = project.extensions.getByName('latex')
+                ext?.outputMode ?: ErrorOutputMode.DEFAULT
+            }
             task.conventionMapping.latexCompiler = {
                 def ext = project.extensions.getByName('latex')
                 ext?.compiler ?: LaTeXExtension.DEFAULT_COMPILER

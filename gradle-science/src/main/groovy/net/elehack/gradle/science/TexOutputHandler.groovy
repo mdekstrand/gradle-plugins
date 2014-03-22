@@ -8,54 +8,65 @@ import org.slf4j.Logger
  */
 class TexOutputHandler extends ProcessOutputHandler {
     private boolean inError = false
-    private def errorPattern = ~/^!/
-    private def warningPattern = ~/Warning:/
-    private def errLinePattern = ~/^l\.\d+/
+    private final def errorPattern = ~/^!/
+    private final def warningPattern = ~/Warning:/
+    private final def errLinePattern = ~/^l\.\d+/
+    private ErrorOutputMode outputMode
     private List<Message> messages = new ArrayList<>()
 
-    public TexOutputHandler(String name) {
+    public TexOutputHandler(String name, ErrorOutputMode mode) {
         super(name)
+        outputMode = mode ?: ErrorOutputMode.DEFAULT
     }
 
     @Override
     protected void handleLine(String line) {
+        def level = MessageLevel.INFO
         if (inError) {
-            messages << new Message(Level.ERROR, line)
             if (line =~ errLinePattern) {
                 inError = false
             }
+            if (outputMode == ErrorOutputMode.IMMEDIATE) {
+                method = MessageLevel.ERROR
+            } else {
+                messages << new Message(MessageLevel.ERROR, line)
+            }
         } else if (line =~ errorPattern) {
-            messages << new Message(Level.ERROR, line)
             inError = true
+            if (outputMode == ErrorOutputMode.IMMEDIATE) {
+                method = MessageLevel.ERROR
+            } else {
+                messages << new Message(MessageLevel.ERROR, line)
+            }
         } else if (line =~ warningPattern) {
-            messages << new Message(Level.WARN, line)
+            if (outputMode == ErrorOutputMode.IMMEDIATE) {
+                method = MessageLevel.WARN
+            } else {
+                messages << new Message(MessageLevel.WARN, line)
+            }
         }
 
-        logger.info line
+        level.print(logger, line)
     }
 
     public void printMessages() {
         for (msg in messages) {
             switch (msg.level) {
-                case Level.WARN:
+                case WARN:
                     logger.warn msg.content
                     break;
-                case Level.ERROR:
+                case ERROR:
                     logger.error msg.content
                     break;
             }
         }
     }
 
-    private static enum Level {
-        WARN, ERROR
-    }
-
     private static class Message {
-        final Level level
+        final MessageLevel level
         final String content
 
-        Message(Level lvl, String str) {
+        Message(MessageLevel lvl, String str) {
             level = lvl
             content = str
         }
