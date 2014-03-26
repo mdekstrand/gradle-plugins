@@ -77,5 +77,7 @@ public interface PandocSpec {
 
     PandocSpecImpl copySpec();
 
+    List<String> getFullArgs();
+
     void execute(Project project, File input, File output);
 }

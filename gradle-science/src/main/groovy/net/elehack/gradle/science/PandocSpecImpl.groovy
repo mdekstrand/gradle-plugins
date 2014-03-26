@@ -127,32 +127,45 @@ class PandocSpecImpl implements PandocSpec {
         spec
     }
 
+    List<String> getFullArgs() {
+        List<String> args = []
+        args << '-t'
+        args << outputFormatString
+        args << '-f'
+        args << sourceFormatString
+        for (style in cssStylesheets) {
+            args << 'c'
+            args << style
+        }
+        if (standalone) {
+            args << '--standalone'
+        }
+        if (template != null) {
+            args << '--template'
+            args << project.file(template)
+        }
+        if (bibliography != null) {
+            args << '--bibliography'
+            args << project.file(bibliography)
+        }
+        if (citationStyle != null) {
+            args << '--csl'
+            args << project.file(citationStyle)
+        }
+        if (filter != null) {
+            args << '--filter'
+            args << filter
+        }
+        args.addAll extraArgs
+        args
+    }
+
     void execute(Project project, File input, File output) {
         project.mkdir(output.parentFile)
         project.exec {
             workingDir project.projectDir
             executable project.science.pandoc
-            args '-t', outputFormatString
-            args '-f', sourceFormatString
-            for (style in cssStylesheets) {
-                args '-c', style
-            }
-            if (standalone) {
-                args '--standalone'
-            }
-            if (template != null) {
-                args '--template', project.file(template)
-            }
-            if (bibliography != null) {
-                args '--bibliography', project.file(bibliography)
-            }
-            if (citationStyle != null) {
-                args '--csl', project.file(citationStyle)
-            }
-            if (filter != null) {
-                args '--filter', filter
-            }
-            args extraArgs
+            args fullArgs
             args '-o', output
             args input
         }

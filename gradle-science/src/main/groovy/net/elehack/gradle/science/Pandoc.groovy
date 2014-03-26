@@ -95,6 +95,9 @@ class Pandoc extends SourceTask implements PandocSpec {
                 it.input
             }
         }
+        inputs.property 'args', {
+            fullArgs
+        }
     }
 
     private class Doc {
