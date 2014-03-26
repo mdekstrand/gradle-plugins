@@ -51,14 +51,7 @@ class TexOutputHandler extends ProcessOutputHandler {
 
     public void printMessages() {
         for (msg in messages) {
-            switch (msg.level) {
-                case WARN:
-                    logger.warn msg.content
-                    break;
-                case ERROR:
-                    logger.error msg.content
-                    break;
-            }
+            msg.level.print(logger, msg.content)
         }
     }
 
