@@ -1,7 +1,5 @@
 package net.elehack.gradle.science;
 
-import org.gradle.api.Project;
-
 import java.io.File;
 import java.util.List;
 
@@ -79,5 +77,5 @@ public interface PandocSpec {
 
     List<String> getFullArgs();
 
-    void execute(Project project, File input, File output);
+    void execute(File input, File output);
 }

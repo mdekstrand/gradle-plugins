@@ -6,6 +6,7 @@ import org.gradle.api.Project
  * Specify a Pandoc execution.
  */
 class PandocSpecImpl implements PandocSpec {
+    final Project project
     String sourceFormat = 'markdown'
     String outputFormat = 'html'
     List<String> srcFlags = []
@@ -17,6 +18,10 @@ class PandocSpecImpl implements PandocSpec {
     List<String> cssStylesheets = []
     String filter = null
     def template = null
+
+    PandocSpecImpl(Project prj) {
+        project = prj;
+    }
 
     void sourceFormat(String fmt) {
         sourceFormat = fmt
@@ -109,7 +114,7 @@ class PandocSpecImpl implements PandocSpec {
     }
 
     PandocSpecImpl copySpec() {
-        def spec = new PandocSpecImpl()
+        def spec = new PandocSpecImpl(project)
         for (prop in spec.metaClass.properties) {
             if (prop.name == 'metaClass' || prop.name == 'class') {
                 continue;
@@ -160,7 +165,7 @@ class PandocSpecImpl implements PandocSpec {
         args
     }
 
-    void execute(Project project, File input, File output) {
+    void execute(File input, File output) {
         project.mkdir(output.parentFile)
         project.exec {
             workingDir project.projectDir

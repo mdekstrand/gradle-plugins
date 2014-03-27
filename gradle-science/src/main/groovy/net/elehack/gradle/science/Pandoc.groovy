@@ -1,5 +1,6 @@
 package net.elehack.gradle.science
 
+import org.gradle.api.Project
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
@@ -16,7 +17,7 @@ import org.gradle.api.tasks.incremental.InputFileDetails
  * @author <a href="http://elehack.net">Michael Ekstrand</a>
  */
 class Pandoc extends SourceTask implements PandocSpec {
-    @Delegate PandocSpec spec = new PandocSpecImpl()
+    @Delegate PandocSpec spec = new PandocSpecImpl(project)
     List<Doc> documents = []
     Object outputDir = {
         project.buildDir
@@ -83,7 +84,7 @@ class Pandoc extends SourceTask implements PandocSpec {
             def doc = lookupDocument(source)
             PandocSpecImpl spec = doc.pandocSpec
             def output = doc.getOutputFile(spec)
-            spec.execute(project, source, output)
+            spec.execute(source, output)
         }
     }
 
