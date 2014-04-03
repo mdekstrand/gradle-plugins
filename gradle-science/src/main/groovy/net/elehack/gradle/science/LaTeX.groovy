@@ -1,9 +1,11 @@
 package net.elehack.gradle.science
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.*
-import org.gradle.process.ExecResult
 import org.gradle.api.internal.ConventionTask
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.InputFiles
+import org.gradle.api.tasks.OutputFiles
+import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecResult
 
 import java.nio.file.Paths
 
