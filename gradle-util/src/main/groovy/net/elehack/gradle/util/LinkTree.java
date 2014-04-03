@@ -1,4 +1,4 @@
-package net.elehack.gradle.science;
+package net.elehack.gradle.util;
 
 import org.gradle.api.internal.file.BaseDirFileResolver;
 import org.gradle.api.internal.file.CopyActionProcessingStreamAction;
