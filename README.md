@@ -39,3 +39,7 @@ gem "sass"
 Tasks for doing scientific publication and data analysis.  A lot of publication-related things.
 
 No documentation yet.
+
+## gradle-util
+
+A grab-bag of utility tasks for Gradle.
