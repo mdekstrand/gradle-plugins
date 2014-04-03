@@ -27,20 +27,20 @@ class TexOutputHandler extends ProcessOutputHandler {
                 inError = false
             }
             if (outputMode == ErrorOutputMode.IMMEDIATE) {
-                method = MessageLevel.ERROR
+                level = MessageLevel.ERROR
             } else {
                 messages << new Message(MessageLevel.ERROR, line)
             }
         } else if (line =~ errorPattern) {
             inError = true
             if (outputMode == ErrorOutputMode.IMMEDIATE) {
-                method = MessageLevel.ERROR
+                level = MessageLevel.ERROR
             } else {
                 messages << new Message(MessageLevel.ERROR, line)
             }
         } else if (line =~ warningPattern) {
             if (outputMode == ErrorOutputMode.IMMEDIATE) {
-                method = MessageLevel.WARN
+                level = MessageLevel.WARN
             } else {
                 messages << new Message(MessageLevel.WARN, line)
             }
