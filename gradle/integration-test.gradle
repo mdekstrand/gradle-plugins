@@ -1,21 +1,23 @@
-file('src/it').eachDir { File testDir ->
-    def runDir = "build/tests/$testDir.name"
-    def suffix = testDir.name.capitalize()
-    task("prepareTest$suffix", type: Sync) {
-        from testDir
-        into runDir
-        outputs.upToDateWhen {
-            false
+if (file('src/it').exists()) {
+    file('src/it').eachDir { File testDir ->
+        def runDir = "build/tests/$testDir.name"
+        def suffix = testDir.name.capitalize()
+        task("prepareTest$suffix", type: Sync) {
+            from testDir
+            into runDir
+            outputs.upToDateWhen {
+                false
+            }
         }
+        task("test$suffix", type: GradleBuild) {
+            dependsOn assemble, "prepareTest$suffix"
+            dir = file(runDir)
+            startParameter.projectProperties = [
+                    projectLibDir: file('build/libs'),
+                    testedProjectDir: projectDir]
+            startParameter.rerunTasks = true
+            tasks = ['verify']
+        }
+        check.dependsOn "test$suffix"
     }
-    task("test$suffix", type: GradleBuild) {
-        dependsOn assemble, "prepareTest$suffix"
-        dir = file(runDir)
-        startParameter.projectProperties = [
-                projectLibDir: file('build/libs'),
-                testedProjectDir: projectDir]
-        startParameter.rerunTasks = true
-        tasks = ['verify']
-    }
-    check.dependsOn "test$suffix"
 }
