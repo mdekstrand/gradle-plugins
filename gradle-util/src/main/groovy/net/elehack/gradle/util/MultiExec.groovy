@@ -89,20 +89,21 @@ class MultiExec extends SourceTask {
         inputs.outOfDate { change ->
             if (sourceFiles.contains(change.file)) {
                 logger.info 'queueing file {}', change.file
+                def block
+                if (configBlock.maximumNumberOfParameters > 1) {
+                    block = configBlock.curry(change.file, getOutput(change.file))
+                } else {
+                    block = configBlock.curry(change.file)
+                }
                 tasks << {
                     logger.info 'processing {}', change.file
-                    def block
-                    if (configBlock.maximumNumberOfParameters > 1) {
-                        block = configBlock.curry(change.file, getOutput(change.file))
-                    } else {
-                        block = configBlock.curry(change.file)
-                    }
                     project.invokeMethod(method, block)
                 }
             } else {
                 logger.info 'file {} changed, but is not a source file', change.file
             }
         }
+        logger.info 'running {} tasks with method {}', tasks.size(), method
         if (threadCount == 1) {
             logger.info 'running on a single thread'
             for (task in tasks) {
@@ -117,11 +118,13 @@ class MultiExec extends SourceTask {
             ExecutorService svc = Executors.newFixedThreadPool(nt)
             try {
                 def results = tasks.collect { t -> svc.submit(t) }
+                logger.info 'waiting on results of {} tasks', results.size()
                 for (res in results) {
                     try {
                         res.get()
                     } catch (Exception ex) {
                         svc.shutdownNow()
+                        throw ex
                     }
                 }
             } finally {
