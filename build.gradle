@@ -9,3 +9,18 @@ allprojects {
         }
     }
 }
+
+subprojects {
+    apply plugin: 'groovy'
+    apply plugin: 'maven'
+    apply from: "$rootDir/gradle/maven-publish.gradle"
+
+    dependencies {
+        compile gradleApi()
+        compile localGroovy()
+    }
+
+    apply from: "$rootDir/gradle/integration-test.gradle"
+
+    apply from: "$rootDir/gradle/travis.gradle"
+}
