@@ -26,9 +26,22 @@ task pandoc(type: MultiExec) {
     }
 }
 
-task verify(dependsOn: pandoc) {
+task parallel(type: MultiExec) {
+    source projectDir
+    include '*.txt'
+    threadCount 2
+    outputMapping { it.name - '.txt' + '.2.html' }
+    exec { src, dst ->
+        executable 'pandoc'
+        workingDir projectDir
+        args '-o', dst
+        args src
+    }
+}
+
+task verify(dependsOn: [pandoc, parallel]) {
     doLast {
-        for (f in ['bar.html', 'foo.html']) {
+        for (f in ['bar.html', 'foo.html', 'bar.2.html', 'foo.2.html']) {
             if (!file(f).exists()) {
                 throw new RuntimeException("expected file $f doesn't exist")
             }

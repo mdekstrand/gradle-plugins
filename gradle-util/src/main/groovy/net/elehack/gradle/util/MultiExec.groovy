@@ -5,6 +5,9 @@ import org.gradle.api.tasks.SourceTask
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs
 
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 /**
  * Gradle task for applying a program across multiple input files.  It runs the program once for each
  * changed file in its source files.
@@ -17,6 +20,7 @@ class MultiExec extends SourceTask {
 
     def Closure configBlock
     def String method
+    def int threadCount = 1
 
     def getSourceFiles() {
         return source.files
@@ -81,15 +85,43 @@ class MultiExec extends SourceTask {
 
     @TaskAction
     void execute(IncrementalTaskInputs inputs) {
+        List<Closure> tasks = []
         inputs.outOfDate { change ->
-            logger.info 'processing {}', change.file
-            def block
-            if (configBlock.maximumNumberOfParameters > 1) {
-                block = configBlock.curry(change.file, getOutput(change.file))
-            } else {
-                block = configBlock.curry(change.file)
+            if (sourceFiles.contains(change.file)) {
+                tasks << {
+                    logger.info 'processing {}', change.file
+                    def block
+                    if (configBlock.maximumNumberOfParameters > 1) {
+                        block = configBlock.curry(change.file, getOutput(change.file))
+                    } else {
+                        block = configBlock.curry(change.file)
+                    }
+                    project.invokeMethod(method, block)
+                }
             }
-            project.invokeMethod(method, block)
+        }
+        if (threadCount == 1) {
+            for (task in tasks) {
+                task.run()
+            }
+        } else {
+            def nt = threadCount
+            if (nt <= 0) {
+                nt = Runtime.getRuntime().availableProcessors()
+            }
+            ExecutorService svc = Executors.newFixedThreadPool(nt)
+            try {
+                def results = tasks.collect { t -> svc.submit(t) }
+                for (res in results) {
+                    try {
+                        res.get()
+                    } catch (Exception ex) {
+                        svc.shutdownNow()
+                    }
+                }
+            } finally {
+                svc.shutdown()
+            }
         }
         inputs.removed { change ->
             def output = getOutput(change.file)
