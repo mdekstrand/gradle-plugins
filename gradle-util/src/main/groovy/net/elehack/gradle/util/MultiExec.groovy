@@ -88,6 +88,7 @@ class MultiExec extends SourceTask {
         List<Closure> tasks = []
         inputs.outOfDate { change ->
             if (sourceFiles.contains(change.file)) {
+                logger.info 'queueing file {}', change.file
                 tasks << {
                     logger.info 'processing {}', change.file
                     def block
@@ -98,9 +99,12 @@ class MultiExec extends SourceTask {
                     }
                     project.invokeMethod(method, block)
                 }
+            } else {
+                logger.info 'file {} changed, but is not a source file', change.file
             }
         }
         if (threadCount == 1) {
+            logger.info 'running on a single thread'
             for (task in tasks) {
                 task.run()
             }
@@ -109,6 +113,7 @@ class MultiExec extends SourceTask {
             if (nt <= 0) {
                 nt = Runtime.getRuntime().availableProcessors()
             }
+            logger.info 'running on {} threads', nt
             ExecutorService svc = Executors.newFixedThreadPool(nt)
             try {
                 def results = tasks.collect { t -> svc.submit(t) }
