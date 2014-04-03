@@ -1,0 +1,37 @@
+import net.elehack.gradle.util.MultiExec
+
+import java.nio.file.Files
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath fileTree(projectLibDir) {
+            exclude '*-sources.jar'
+            exclude '*-javadoc.jar'
+        }
+    }
+}
+
+task pandoc(type: MultiExec) {
+    source projectDir
+    include '*.txt'
+    outputMapping { it.name - '.txt' + '.html' }
+    exec { src, dst ->
+        executable 'pandoc'
+        workingDir projectDir
+        args '-o', dst
+        args src
+    }
+}
+
+task verify(dependsOn: pandoc) {
+    doLast {
+        for (f in ['bar.html', 'foo.html']) {
+            if (!file(f).exists()) {
+                throw new RuntimeException("expected file $f doesn't exist")
+            }
+        }
+    }
+}
