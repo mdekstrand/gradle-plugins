@@ -1,6 +1,10 @@
 language: groovy
 jdk:
 - openjdk7
+cache:
+  apt: true
+  directories:
+  - $HOME/.gradle/caches
 install:
  - sudo apt-get install pandoc texlive-latex-base texlive-luatex r-base-core
  - ./gradlew ciPrepare
