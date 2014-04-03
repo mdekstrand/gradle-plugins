@@ -1,7 +1,4 @@
 package net.elehack.gradle.science
-
-import org.slf4j.Logger
-
 /**
  * TeX process output handler.  Parses TeX output for errors/warnings, and defers them until after
  * the process has finished so we only print for the last run.
