@@ -1,5 +1,10 @@
 version = '0.3-SNAPSHOT'
 
+projectName = 'Gradle Science'
+projectDescription = """
+Gradle tasks for scientific publication.
+"""
+
 dependencies {
     compile 'com.itextpdf:itextpdf:5.4.4'
 }

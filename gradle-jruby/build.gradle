@@ -1,1 +1,5 @@
 version = '0.2-SNAPSHOT'
+projectName = 'Gradle JRuby'
+projectDescription = """
+Gradle tasks for managing JRuby installations.
+"""
