@@ -9,9 +9,11 @@ import org.gradle.plugins.signing.signatory.pgp.PgpKeyId
  */
 class GnuPGSignatory extends SignatorySupport {
     private Project project
+    private PgpKeyId keyId
 
-    public GnuPGSignatory(Project prj) {
+    public GnuPGSignatory(Project prj, String key) {
         project = prj
+        keyId = new PgpKeyId(key)
     }
 
     @Override
@@ -33,10 +35,6 @@ class GnuPGSignatory extends SignatorySupport {
     }
 
     PgpKeyId getKeyId() {
-        if (project.hasProperty('signing.keyId')) {
-            return new PgpKeyId(project.getProperty('signing.keyId') as String)
-        } else {
-            return null
-        }
+        return keyId;
     }
 }

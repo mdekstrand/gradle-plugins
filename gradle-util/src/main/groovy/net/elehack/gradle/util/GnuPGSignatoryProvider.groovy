@@ -18,7 +18,11 @@ class GnuPGSignatoryProvider implements SignatoryProvider {
 
     @Override
     Signatory getDefaultSignatory(Project project) {
-        return new GnuPGSignatory(project)
+        if (project.hasProperty('signing.keyId')) {
+            return new GnuPGSignatory(project, project.getProperty('signing.keyId'))
+        } else {
+            return null
+        }
     }
 
     @Override

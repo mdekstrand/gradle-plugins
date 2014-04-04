@@ -40,9 +40,11 @@ task archiveInfo << {
 
 class GnuPGSignatory extends SignatorySupport {
     private Project project
+    private PgpKeyId keyId
 
-    public GnuPGSignatory(Project prj) {
+    public GnuPGSignatory(Project prj, String key) {
         project = prj
+        keyId = new PgpKeyId(key)
     }
 
     @Override
@@ -64,11 +66,7 @@ class GnuPGSignatory extends SignatorySupport {
     }
 
     PgpKeyId getKeyId() {
-        if (project.hasProperty('signing.keyId')) {
-            return new PgpKeyId(project.getProperty('signing.keyId'))
-        } else {
-            return null
-        }
+        return keyId
     }
 }
 
@@ -81,7 +79,11 @@ class GnuPGSignatoryProvider implements SignatoryProvider {
 
     @Override
     Signatory getDefaultSignatory(Project project) {
-        return new GnuPGSignatory(project)
+        if (project.hasProperty('signing.keyId')) {
+            return new GnuPGSignatory(project, project.getProperty('signing.keyId'))
+        } else {
+            return null
+        }
     }
 
     @Override
@@ -93,7 +95,7 @@ class GnuPGSignatoryProvider implements SignatoryProvider {
 signing {
     signatories = new GnuPGSignatoryProvider()
     required {
-        !version.endsWith("SNAPSHOT") && gradle.taskGraph.hasTask('uploadArchives')
+        !version.endsWith('SNAPSHOT') && gradle.taskGraph.hasTask('uploadArchives')
     }
     sign configurations.archives
 }
