@@ -1,5 +1,5 @@
 version = '0.2-SNAPSHOT'
-projectName = 'Gradle JRuby'
-projectDescription = """
+ext.projectName = 'Gradle JRuby'
+ext.projectDescription = """
 Gradle tasks for managing JRuby installations.
 """

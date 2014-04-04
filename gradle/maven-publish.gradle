@@ -119,33 +119,35 @@ uploadArchives {
         beforeDeployment { deploy ->
             signing.signPom(deploy)
         }
+    }
+}
 
-        pom.project {
-            name projectName
-            packaging 'jar'
-            // optionally artifactId can be defined here
-            description projectDescription
+afterEvaluate {
+    uploadArchives.repositories.mavenDeployer.pom.project {
+        name projectName
+        packaging 'jar'
+        // optionally artifactId can be defined here
+        description projectDescription
+        url 'http://github.com/elehack/gradle-plugins'
+
+        scm {
+            connection 'scm:git:http://github.com/elehack/gradle-plugins.git'
+            developerConnection 'scm:git:git@github.com:elehack/gradle-plugins.git'
             url 'http://github.com/elehack/gradle-plugins'
+        }
 
-            scm {
-                connection 'scm:git:http://github.com/elehack/gradle-plugins.git'
-                developerConnection 'scm:git:git@github.com:elehack/gradle-plugins.git'
-                url 'http://github.com/elehack/gradle-plugins'
+        licenses {
+            license {
+                name 'MIT'
+                url 'http://opensource.org/licenses/MIT'
             }
+        }
 
-            licenses {
-                license {
-                    name 'MIT'
-                    url 'http://opensource.org/licenses/MIT'
-                }
-            }
-
-            developers {
-                developer {
-                    id 'michael@elehack.net'
-                    name 'Michael Ekstrand'
-                    email 'michael@elehack.net'
-                }
+        developers {
+            developer {
+                id 'michael@elehack.net'
+                name 'Michael Ekstrand'
+                email 'michael@elehack.net'
             }
         }
     }

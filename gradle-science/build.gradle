@@ -1,7 +1,7 @@
 version = '0.3-SNAPSHOT'
 
-projectName = 'Gradle Science'
-projectDescription = """
+ext.projectName = 'Gradle Science'
+ext.projectDescription = """
 Gradle tasks for scientific publication.
 """
 

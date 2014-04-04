@@ -1,5 +1,5 @@
 version = '0.1-SNAPSHOT'
-projectName = 'Gradle Utilities'
-projectDescription = """
+ext.projectName = 'Gradle Utilities'
+ext.projectDescription = """
 A grab-bag of utilities for Gradle.
 """
