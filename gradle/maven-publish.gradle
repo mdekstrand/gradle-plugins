@@ -1,3 +1,9 @@
+import org.gradle.plugins.signing.SigningExtension
+import org.gradle.plugins.signing.signatory.Signatory
+import org.gradle.plugins.signing.signatory.SignatoryProvider
+import org.gradle.plugins.signing.signatory.SignatorySupport
+import org.gradle.plugins.signing.signatory.pgp.PgpKeyId
+
 apply plugin: 'signing'
 
 ext.isReleaseVersion = !version.endsWith("-SNAPSHOT")
@@ -10,7 +16,7 @@ dependencies {
     wagon 'org.apache.maven.wagon:wagon-webdav-jackrabbit:2.6'
 }
 
-task sourceJar(type: Jar) {
+task sourcesJar(type: Jar) {
     from sourceSets.main.allSource
     classifier = 'sources'
 }
@@ -21,35 +27,94 @@ task javadocJar(type: Jar) {
 }
 
 artifacts {
-    archives sourceJar, javadocJar
+    archives sourcesJar, javadocJar
+}
+
+task archiveInfo << {
+    println "$name archives:"
+    for (art in configurations.archives.artifacts) {
+        println "  ${art.file}: $art.classifier $art.extension"
+    }
+    println "dependencies: $configurations.archives.dependencies"
+    println "tasks: $configurations.archives.buildDependencies"
+    println "upload deps:"
+}
+
+class GnuPGSignatory extends SignatorySupport {
+    private Project project
+
+    public GnuPGSignatory(Project prj) {
+        project = prj
+    }
+
+    @Override
+    String getName() {
+        return "GnuPG"
+    }
+
+    @Override
+    void sign(InputStream inputStream, OutputStream outputStream) {
+        project.exec {
+            executable 'gpg'
+            args '--detach-sign'
+            if (keyId != null) {
+                args '--local-user', keyId.asHex
+            }
+            standardInput = inputStream
+            standardOutput = outputStream
+        }
+    }
+
+    PgpKeyId getKeyId() {
+        if (project.hasProperty('signing.keyId')) {
+            return new PgpKeyId(project.getProperty('signing.keyId'))
+        } else {
+            return null
+        }
+    }
+}
+
+class GnuPGSignatoryProvider implements SignatoryProvider {
+    private Map<String,GnuPGSignatory> signatories = new HashMap()
+    @Override
+    void configure(SigningExtension signingExtension, Closure closure) {
+        /* no-op - we do not support configuration. */
+    }
+
+    @Override
+    Signatory getDefaultSignatory(Project project) {
+        return new GnuPGSignatory(project)
+    }
+
+    @Override
+    Signatory getSignatory(String s) {
+        return signatories[s]
+    }
 }
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") && !project.hasProperty('skipSignatures') }
+    signatories = new GnuPGSignatoryProvider()
+    required { isReleaseVersion }
     sign configurations.archives
 }
 
 if (!project.hasProperty('deployUrl')) {
-    ext.deployUrl = 'davs://elehack.net/maven/'
+    ext.deployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
 }
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.wagon
+        def user = System.getenv('DEPLOY_USER') ?: project.properties.get('deployUser', null)
+        def password = System.getenv('DEPLOY_PASSWORD') ?: project.properties.get('deployPassword', null)
+
         repository(url: deployUrl) {
-            def user = System.getenv('DEPLOY_USER')
-            if (user == null && project.hasProperty('deployUser')) {
-                user = project.deployUser
-            }
-            def password = System.getenv('DEPLOY_PASSWORD')
-            if (password == null && project.hasProperty('deployPassword')) {
-                password = project.deployPassword
-            }
             if (user != null && password != null) {
                 authentication(userName: user, password: password)
             }
         }
-        beforeDeployment {
-            signing.signPom(it)
+
+        beforeDeployment { deploy ->
+            signing.signPom(deploy)
         }
     }
 }
