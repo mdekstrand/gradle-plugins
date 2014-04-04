@@ -98,16 +98,19 @@ signing {
     sign configurations.archives
 }
 
-if (!project.hasProperty('deployUrl')) {
-    ext.deployUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-}
 uploadArchives {
     repositories.mavenDeployer {
         configuration = configurations.wagon
-        def user = System.getenv('DEPLOY_USER') ?: project.properties.get('deployUser', null)
-        def password = System.getenv('DEPLOY_PASSWORD') ?: project.properties.get('deployPassword', null)
+        def user = System.getenv('DEPLOY_USER') ?: project.properties.get('deploy.user', null)
+        def password = System.getenv('DEPLOY_PASSWORD') ?: project.properties.get('deploy.password', null)
 
-        repository(url: deployUrl) {
+        repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+            if (user != null && password != null) {
+                authentication(userName: user, password: password)
+            }
+        }
+
+        snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
             if (user != null && password != null) {
                 authentication(userName: user, password: password)
             }
