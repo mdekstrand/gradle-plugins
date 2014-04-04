@@ -13,5 +13,5 @@ after_success:
 - ./gradlew ciPostBuild
 env:
   global:
-  - DEPLOY_USER=travis
-  - secure: cUGqhBVQMOeKco9NdwlTXOLFUWGtlqNBtVATigGAKXYPqlYwb17DSdM28p7+nKZUFSOXDEAa4JrAXWOpBTC7qY06cDTt7Zoj0Fcd0DuK/pXyDnqh7QMRRvrtnEFq/utbws4Yhm9hTdUosN5bz49CK9v5ZVAtPAe8/rwp6Y1ksMM=
+  - DEPLOY_USER=ekstrand
+  - secure: Z3WTzkpSiSfH985uLIfyHw2HM/+R8+qT2DzwiMbzS4g+JtxHox7sFOlLyhc2Xn+2Yl68KFkJLIl/i0EKI1kHzYhC/7xajPiOOWD5aTUsYrD8q0C+woYPFDnS22f+qjEtcK2b3eh39sl3VUweylGXfc8WrqA5U67TCWmJV9yBfEY=
