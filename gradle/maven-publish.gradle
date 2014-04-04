@@ -92,7 +92,9 @@ class GnuPGSignatoryProvider implements SignatoryProvider {
 
 signing {
     signatories = new GnuPGSignatoryProvider()
-    required { !version.endsWith("-SNAPSHOT") }
+    required {
+        !version.endsWith("SNAPSHOT") && gradle.taskGraph.hasTask('uploadArchives')
+    }
     sign configurations.archives
 }
 
