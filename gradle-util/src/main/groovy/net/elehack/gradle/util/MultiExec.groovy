@@ -85,22 +85,33 @@ class MultiExec extends SourceTask {
 
     @TaskAction
     void execute(IncrementalTaskInputs inputs) {
-        List<Closure> tasks = []
+        def toRebuild = new LinkedHashSet<File>()
+        def otherFiles = new HashSet<File>()
         inputs.outOfDate { change ->
             if (sourceFiles.contains(change.file)) {
                 logger.info 'queueing file {}', change.file
-                def block
-                if (configBlock.maximumNumberOfParameters > 1) {
-                    block = configBlock.curry(change.file, getOutput(change.file))
-                } else {
-                    block = configBlock.curry(change.file)
-                }
-                tasks << {
-                    logger.info 'processing {}', change.file
-                    project.invokeMethod(method, block)
-                }
+                toRebuild << change.file
             } else {
                 logger.info 'file {} changed, but is not a source file', change.file
+                otherFiles << change.file
+            }
+        }
+        if (!otherFiles.isEmpty() && toRebuild.size() != sourceFiles.size()) {
+            logger.info '{} non-source files changed, rebuilding all'
+            toRebuild = sourceFiles
+        }
+        def tasks = []
+        toRebuild.each { file ->
+            tasks << {
+                def output = getOutput(file)
+                logger.info 'processing {} into {}', file, output
+                def block
+                if (configBlock.maximumNumberOfParameters > 1) {
+                    block = configBlock.curry(file, output)
+                } else {
+                    block = configBlock.curry(file)
+                }
+                project.invokeMethod(method, block)
             }
         }
         logger.info 'running {} tasks with method {}', tasks.size(), method
