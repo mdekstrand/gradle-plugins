@@ -22,6 +22,7 @@ class FetchZotero extends ConventionTask {
 
     def String collection
     def String user
+    def String group
 
     def output = 'references.bib'
 
@@ -45,7 +46,24 @@ class FetchZotero extends ConventionTask {
     }
 
     String getCollectionPath() {
-        return "/users/$user/collections/$collection/items"
+        def sb = new StringBuilder()
+        if (user != null) {
+            if (group != null) {
+                logger.warn 'both user {} and group {} specified, using user', user, group
+            }
+            sb.append('/users/').append(user)
+        } else if (group != null) {
+            sb.append('/groups/').append(group)
+        } else {
+            logger.error 'no user or group specified'
+            throw new IllegalStateException('no user or group specified')
+        }
+
+        if (collection != null) {
+            sb.append('/collections/').append(collection)
+        }
+        sb.append('/items')
+        return sb.toString()
     }
 
     @TaskAction
