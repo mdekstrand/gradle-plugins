@@ -7,4 +7,5 @@ Gradle tasks for scientific publication.
 
 dependencies {
     compile 'com.itextpdf:itextpdf:5.4.4'
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
 }

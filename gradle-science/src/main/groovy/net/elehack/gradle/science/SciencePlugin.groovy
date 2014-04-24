@@ -22,6 +22,11 @@ class SciencePlugin implements Plugin<Project> {
                 outputMode project.getProperty('latex.outputMode')
             }
         }
+        if (project.hasProperty('zotero.key')) {
+            project.science {
+                zoteroKey project.getProperty('zotero.key')
+            }
+        }
         project.tasks.withType(Rscript.class).all { task ->
             task.conventionMapping.rscriptExecutable = {
                 project.extensions.getByName('science')?.rscript ?: 'Rscript'
@@ -36,6 +41,11 @@ class SciencePlugin implements Plugin<Project> {
             task.conventionMapping.latexCompiler = {
                 def ext = project.extensions.getByName('latex')
                 ext?.compiler ?: LaTeXExtension.DEFAULT_COMPILER
+            }
+        }
+        project.tasks.withType(FetchZotero) { task ->
+            task.conventionMapping.authKey = {
+                project.extensions.getByName('science')?.zoteroKey
             }
         }
     }

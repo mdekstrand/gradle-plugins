@@ -15,4 +15,9 @@ public class ScienceExtension {
      * The Rscript executable.
      */
     String rscript = 'Rscript'
+
+    /**
+     * A Zotero authentication key.
+     */
+    String zoteroKey
 }
