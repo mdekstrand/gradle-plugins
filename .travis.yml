@@ -13,5 +13,6 @@ after_success:
 - ./gradlew ciPostBuild
 env:
   global:
+  - TERM=dumb
   - DEPLOY_USER=ekstrand
   - secure: Z3WTzkpSiSfH985uLIfyHw2HM/+R8+qT2DzwiMbzS4g+JtxHox7sFOlLyhc2Xn+2Yl68KFkJLIl/i0EKI1kHzYhC/7xajPiOOWD5aTUsYrD8q0C+woYPFDnS22f+qjEtcK2b3eh39sl3VUweylGXfc8WrqA5U67TCWmJV9yBfEY=
