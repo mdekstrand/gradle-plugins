@@ -15,7 +15,6 @@ class LaTeX extends ConventionTask {
     List latexArgs = []
     private def workDir
     String latexCompiler
-    ErrorOutputMode outputMode
 
     /**
      * Specify the master document.  Unless a separate working directory is specified, LaTeX will
@@ -169,7 +168,7 @@ class LaTeX extends ConventionTask {
         logger.info 'running {} {}', compiler, master
         sequence << 'latex'
 
-        def handler = new ProcessOutputHandler(compiler, getOutputMode())
+        def handler = new ProcessOutputHandler(compiler)
 
         def run = new TeXResults()
         run.addCheckedFile('aux')
