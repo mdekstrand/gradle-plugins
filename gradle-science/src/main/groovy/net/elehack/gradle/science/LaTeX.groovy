@@ -36,6 +36,11 @@ class LaTeX extends ConventionTask {
         return new File(workingDir, name)
     }
 
+    File getLogFile() {
+        def name = master - '.tex'
+        return new File(workingDir, "${name}.log")
+    }
+
     void latexArgs(Object... args) {
         latexArgs.addAll(args)
     }
@@ -151,7 +156,8 @@ class LaTeX extends ConventionTask {
             }
         }
 
-        results.output.printMessages()
+        printLogMessages()
+
         if (results.failed()) {
             logger.error 'LaTeX failed with code {}', results.execResult.exitValue
             throw new RuntimeException("failed LaTeX run")
@@ -163,9 +169,9 @@ class LaTeX extends ConventionTask {
         logger.info 'running {} {}', compiler, master
         sequence << 'latex'
 
-        def handler = new TexOutputHandler(compiler, getOutputMode())
+        def handler = new ProcessOutputHandler(compiler, getOutputMode())
 
-        def run = new TeXResults(handler)
+        def run = new TeXResults()
         run.addCheckedFile('aux')
         run.addCheckedFile('idx')
 
@@ -175,7 +181,7 @@ class LaTeX extends ConventionTask {
         run.execResult = project.exec {
             workingDir = this.workingDir
             executable compiler
-            args '-recorder', '-interaction', 'nonstopmode'
+            args '-recorder', '-interaction', 'nonstopmode', '-file-line-error'
             args latexArgs
             args documentName
             standardOutput = handler.outputStream
@@ -221,14 +227,20 @@ class LaTeX extends ConventionTask {
         }
     }
 
+    void printLogMessages() {
+        logFile.eachLine { line ->
+            if (line =~ /^\.?\/.*:\d+:/) {
+                logger.error(line)
+            } else if (line =~ /Warning:/) {
+                // TODO Track the active input file
+                logger.warn(line)
+            }
+        }
+    }
+
     private class TeXResults {
         final List<TeXFile> files = []
-        TexOutputHandler output
         ExecResult execResult
-
-        TeXResults(TexOutputHandler oh) {
-            output = oh
-        }
 
         TeXFile getFile(String key) {
             files.find { tf -> tf.key == key }
