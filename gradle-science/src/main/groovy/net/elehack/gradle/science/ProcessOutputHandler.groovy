@@ -41,13 +41,13 @@ class ProcessOutputHandler extends Thread {
 
     @Override
     void run() {
-        logger.debug "Starting TeX output handling thread"
+        logger.debug "Starting process output handling thread"
         try {
             String line
             while ((line = reader.readLine()) != null) {
                 handleLine line
             }
-            logger.debug "TeX output thread shutting down"
+            logger.debug "Process output thread shutting down"
         } finally {
             reader.close()
         }
