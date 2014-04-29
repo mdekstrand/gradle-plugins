@@ -180,7 +180,9 @@ class LaTeX extends ConventionTask {
         run.execResult = project.exec {
             workingDir = this.workingDir
             executable compiler
-            args '-recorder', '-interaction', 'nonstopmode', '-file-line-error'
+            args '-recorder'
+            args '-interaction', 'errorstopmode'
+            args '-file-line-error'
             args latexArgs
             args documentName
             standardOutput = handler.outputStream
