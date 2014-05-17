@@ -59,9 +59,13 @@ class BrilliantIDEAPlugin implements Plugin<Project> {
             afterEvaluate {
                 idea {
                     module {
-                        if (plugins.hasPlugin('base')) {
-                            outputDir = sourceSets.main.output.classesDir
-                            testOutputDir = sourceSets.test.output.classesDir
+                        def main = sourceSets.findByName('main')
+                        if (main != null) {
+                            outputDir = main.output.classesDir
+                        }
+                        def test = sourceSets.findByName('test')
+                        if (test != null) {
+                            testOutputDir = test.output.classesDir
                         }
                         downloadSources = true
                         downloadJavadoc = true
