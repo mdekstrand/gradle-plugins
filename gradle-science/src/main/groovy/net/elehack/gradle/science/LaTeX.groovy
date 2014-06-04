@@ -138,6 +138,9 @@ class LaTeX extends ConventionTask {
         if (results.needsBibtex()) {
             runBibtex()
             results = runLaTeX()
+        } else if (results.needsBiber()) {
+            runBiber()
+            results = runLaTeX()
         }
 
         int n = 1
@@ -228,6 +231,26 @@ class LaTeX extends ConventionTask {
         }
     }
 
+    void runBiber() {
+        logger.info 'running {} {}', 'biber', master
+        sequence << 'biber'
+
+        def handler = ProcessOutputHandler.create('biber') { line, logger ->
+            if (line =~ /^WARN -/) {
+                logger.warn line
+            } else {
+                logger.info line
+            }
+        }
+        handler.start()
+        project.exec {
+            workingDir = this.workingDir
+            executable 'biber'
+            args documentName
+            standardOutput = handler.outputStream
+        }
+    }
+
     void printLogMessages() {
         logFile.eachLine { line ->
             if (line =~ /^\.?\/.*:\d+:/) {
@@ -293,6 +316,25 @@ class LaTeX extends ConventionTask {
             } else if (bibs.any({f -> f.lastModified() > bbl.lastModified()})) {
                 return true
             } else if (getFile('aux').changed(~/^\\citation\{/)) {
+                return true
+            } else {
+                return false
+            }
+        }
+
+        boolean needsBiber() {
+            def bcfFile = getRelatedFile('bcf')
+            def bblFile = getRelatedFile('bbl')
+            if (!bcfFile.exists()) {
+                return false
+            }
+            def bcf = new XmlSlurper().parse(bcfFile)
+            def bibs = bcf.bibdata.datasource*.text().collect {
+                new File(getWorkingDir(), it)
+            }
+            def lastInputTime = Math.max(bcfFile.lastModified(),
+                                         bibs*.lastModified().max())
+            if (!bblFile.exists() || bblFile.lastModified() < lastInputTime) {
                 return true
             } else {
                 return false
