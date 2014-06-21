@@ -139,7 +139,7 @@ class PandocSpecImpl implements PandocSpec {
         args << '-f'
         args << sourceFormatString
         for (style in cssStylesheets) {
-            args << 'c'
+            args << '-c'
             args << style
         }
         if (standalone) {
