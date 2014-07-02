@@ -1,0 +1,46 @@
+import net.elehack.gradle.git.GitClone
+import net.elehack.gradle.git.GitImportTree
+import net.elehack.gradle.util.MultiExec
+import org.eclipse.jgit.api.Git
+
+import java.nio.file.Files
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:3.4.1.201406201815-r'
+        classpath fileTree(projectLibDir) {
+            exclude '*-sources.jar'
+            exclude '*-javadoc.jar'
+        }
+    }
+}
+
+apply plugin: 'git'
+
+task init << {
+    Git.init().setDirectory(file('repo.git')).call()
+}
+
+task importTree(type: GitImportTree, dependsOn: init) {
+    repository 'repo.git'
+
+    from "$projectLibDir/../../src/main/groovy"
+    include '**/*.groovy'
+
+    message "Test commit"
+    author 'Foo Bar', 'foo@example.org'
+}
+
+task fsck(type: Exec, dependsOn: importTree) {
+    workingDir 'repo.git'
+    executable 'git'
+    args 'fsck'
+}
+
+task verify(dependsOn: fsck) {
+    doLast {
+    }
+}

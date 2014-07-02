@@ -119,7 +119,7 @@ class GitExtension {
         def gitDir = new File(dir, '.git')
         if (gitDir.exists()) {
             frb.gitDir = gitDir
-        } else if (new File(gitDir, 'HEAD').exists()) {
+        } else if (new File(dir, 'HEAD').exists()) {
             frb.gitDir = dir
         } else {
             throw new IllegalArgumentException("$dir is not a Git repo")
