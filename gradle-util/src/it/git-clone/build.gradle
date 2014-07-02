@@ -1,0 +1,41 @@
+import net.elehack.gradle.git.GitClone
+import net.elehack.gradle.util.MultiExec
+
+import java.nio.file.Files
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.eclipse.jgit:org.eclipse.jgit:3.4.1.201406201815-r'
+        classpath fileTree(projectLibDir) {
+            exclude '*-sources.jar'
+            exclude '*-javadoc.jar'
+        }
+    }
+}
+
+apply plugin: 'git'
+
+task initialClone(type: GitClone) {
+    directory "$buildDir/fand"
+    remote "https://github.com/elehack/fand.git"
+}
+
+task bareClone(type: GitClone) {
+    directory "$buildDir/fand-bare.git"
+    remote "https://github.com/elehack/fand.git"
+    bare true
+}
+
+task verify(dependsOn: [initialClone, bareClone]) {
+    doLast {
+        if (!file("$buildDir/fand/.git/HEAD").exists()) {
+            throw new RuntimeException("git repository not there")
+        }
+        if (!file("$buildDir/fand-bare.git/HEAD").exists()) {
+            throw new RuntimeException("bare git repository not there")
+        }
+    }
+}
