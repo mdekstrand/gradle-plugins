@@ -35,9 +35,14 @@ class GitPush extends DefaultTask {
     void doPush() {
         def repo = gitExt.repo(repository)
         def git = new Git(repo)
-        def cmd = git.push()
-        cmd.remote = remote
-        cmd.refSpecs = new ArrayList(refs)
-        cmd.call()
+        try {
+            def cmd = git.push()
+            cmd.remote = remote
+            cmd.refSpecs = new ArrayList(refs)
+            cmd.call()
+        } finally {
+            git.close()
+            repo.close()
+        }
     }
 }

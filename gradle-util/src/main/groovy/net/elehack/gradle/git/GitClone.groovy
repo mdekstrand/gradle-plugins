@@ -45,10 +45,15 @@ class GitClone extends DefaultTask {
             logger.info '{} already exists', dir
             def repo = gitExt.repo(directory, bare)
             def git = new Git(repo)
-            logger.info 'pulling into {}'
-            gitExt.prepCommand(git.pull()
-                                  .setRemote("origin"))
-                  .call()
+            try {
+                logger.info 'pulling into {}'
+                gitExt.prepCommand(git.pull()
+                                      .setRemote("origin"))
+                      .call()
+            } finally {
+                git.close()
+                repo.close()
+            }
         } else {
             logger.info 'cloning new repository'
             def cmd = Git.cloneRepository()
