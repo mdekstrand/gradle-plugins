@@ -60,6 +60,15 @@ public class GitImportTree extends AbstractCopyTask {
             try {
                 index = repo.lockDirCache()
                 def builder = index.builder()
+
+                def prefix = getRootSpec().destPath.pathString
+                for (int i = 0; i < index.getEntryCount(); i++) {
+                    def e = index.getEntry(i)
+                    if (!e.pathString.startsWith(prefix)) {
+                        builder.keep(i, 1)
+                    }
+                }
+
                 inserter = repo.newObjectInserter()
                 logger.info 'walking tree'
                 stream.process(new GitTreeStreamAction(inserter, builder))
