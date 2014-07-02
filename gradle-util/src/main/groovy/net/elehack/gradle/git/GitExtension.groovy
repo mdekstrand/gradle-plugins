@@ -104,6 +104,16 @@ class GitExtension {
         }
     }
 
+    Repository repo(File dir, boolean bare) {
+        def frb = new FileRepositoryBuilder()
+        if (bare) {
+            frb.gitDir = dir
+        } else {
+            frb.gitDir = new File(dir, '.git')
+        }
+        return frb.build()
+    }
+
     ObjectId getHeadRevision() {
         withRepo { Repository repo -> repo.resolve(Constants.HEAD) }
     }

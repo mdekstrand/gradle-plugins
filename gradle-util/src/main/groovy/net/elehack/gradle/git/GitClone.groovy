@@ -43,17 +43,7 @@ class GitClone extends DefaultTask {
         def dir = directory
         if (dir.exists()) {
             logger.info '{} already exists', dir
-            def frb = new FileRepositoryBuilder()
-            if (bare) {
-                frb.gitDir = directory
-            } else {
-                frb.gitDir = new File(directory, '.git')
-            }
-            def repo = frb.build()
-            if (repo.workTree != directory && repo.directory != directory) {
-                logger.error '{} is not a Git repository', directory
-                throw new RuntimeException("cannot find Git repo at $directory")
-            }
+            def repo = gitExt.repo(directory, bare)
             def git = new Git(repo)
             logger.info 'pulling into {}'
             gitExt.prepCommand(git.pull()
