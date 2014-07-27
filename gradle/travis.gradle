@@ -8,8 +8,11 @@ class TravisEnv {
     String getBranch() {
         return System.getenv('TRAVIS_BRANCH')
     }
+    String getJdkVersion() {
+        return System.getenv('TRAVIS_JDK_VERSION')
+    }
     boolean getIsOnMaster() {
-        return repository == 'elehack/gradle-plugins' && branch == 'master'
+        return repository == 'elehack/gradle-plugins' && branch == 'master' && jdkVersion == 'openjdk7'
     }
 }
 extensions.create('travis', TravisEnv)
