@@ -55,29 +55,32 @@ class BrilliantIDEAPlugin implements Plugin<Project> {
         prj.apply plugin: 'idea'
         def iprTask = prj.tasks['ideaProject']
         def ideaTask = prj.tasks['idea']
-        prj.subprojects {
-            apply plugin: 'idea'
+        prj.subprojects { sp ->
+            if (sp.hasProperty('skipIdea') && sp.getProperty('skipIdea')) {
+                return
+            } else {
+                apply plugin: 'idea'
+            }
         }
         prj.allprojects { sp ->
             afterEvaluate {
-                if (sp.getProperty('skipIdea', false)) {
-                    return
-                }
-                idea {
-                    module {
-                        if (sp.hasProperty('sourceSets')) {
-                            def main = sp.sourceSets.findByName('main')
-                            if (main != null) {
-                                outputDir = main.output.classesDir
+                if (plugins.hasPlugin('idea')) {
+                    idea {
+                        module {
+                            if (sp.hasProperty('sourceSets')) {
+                                def main = sp.sourceSets.findByName('main')
+                                if (main != null) {
+                                    outputDir = main.output.classesDir
+                                }
+                                def test = sp.sourceSets.findByName('test')
+                                if (test != null) {
+                                    testOutputDir = test.output.classesDir
+                                }
                             }
-                            def test = sp.sourceSets.findByName('test')
-                            if (test != null) {
-                                testOutputDir = test.output.classesDir
-                            }
+                            downloadSources = true
+                            downloadJavadoc = true
+                            inheritOutputDirs = false
                         }
-                        downloadSources = true
-                        downloadJavadoc = true
-                        inheritOutputDirs = false
                     }
                 }
             }
