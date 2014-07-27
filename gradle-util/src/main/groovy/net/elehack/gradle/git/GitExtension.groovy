@@ -104,29 +104,6 @@ class GitExtension {
         }
     }
 
-    Repository repo(File dir, boolean bare) {
-        def frb = new FileRepositoryBuilder()
-        if (bare) {
-            frb.gitDir = dir
-        } else {
-            frb.gitDir = new File(dir, '.git')
-        }
-        return frb.build()
-    }
-
-    Repository repo(File dir) {
-        def frb = new FileRepositoryBuilder()
-        def gitDir = new File(dir, '.git')
-        if (gitDir.exists()) {
-            frb.gitDir = gitDir
-        } else if (new File(dir, 'HEAD').exists()) {
-            frb.gitDir = dir
-        } else {
-            throw new IllegalArgumentException("$dir is not a Git repo")
-        }
-        return frb.build()
-    }
-
     ObjectId getHeadRevision() {
         withRepo { Repository repo -> repo.resolve(Constants.HEAD) }
     }
