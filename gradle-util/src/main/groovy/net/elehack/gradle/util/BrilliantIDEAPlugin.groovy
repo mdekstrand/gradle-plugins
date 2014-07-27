@@ -53,7 +53,7 @@ class BrilliantIDEAPlugin implements Plugin<Project> {
         def iprTask = prj.tasks['ideaProject']
         prj.subprojects {
             apply plugin: 'idea'
-            iprTask dependsOn ideaModule
+            iprTask.dependsOn(ideaModule)
         }
         prj.allprojects { sp ->
             afterEvaluate {
