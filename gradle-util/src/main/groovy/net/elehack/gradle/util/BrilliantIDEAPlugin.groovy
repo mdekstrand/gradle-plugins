@@ -60,7 +60,7 @@ class BrilliantIDEAPlugin implements Plugin<Project> {
         }
         prj.allprojects { sp ->
             afterEvaluate {
-                if (sp.getProperty('skipIdea', 'false') == 'true') {
+                if (sp.getProperty('skipIdea', false)) {
                     return
                 }
                 idea {
