@@ -60,6 +60,9 @@ class BrilliantIDEAPlugin implements Plugin<Project> {
         }
         prj.allprojects { sp ->
             afterEvaluate {
+                if (sp.getProperty('skipIdea', 'false') == 'true') {
+                    return
+                }
                 idea {
                     module {
                         if (sp.hasProperty('sourceSets')) {
