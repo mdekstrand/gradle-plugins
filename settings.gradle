@@ -1,3 +1,2 @@
-include 'gradle-jruby'
 include 'gradle-util'
 include 'gradle-science'
