@@ -37,6 +37,8 @@
 
 package net.elehack.gradle.util
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.GradleBuild
@@ -47,25 +49,28 @@ import org.gradle.api.tasks.GradleBuild
  * plugin.
  */
 class BrilliantIDEAPlugin implements Plugin<Project> {
+    private final def logger = LoggerFactory.getLogger(BrilliantIDEAPlugin)
     @Override
     void apply(Project prj) {
         prj.apply plugin: 'idea'
         def iprTask = prj.tasks['ideaProject']
+        def ideaTask = prj.tasks['idea']
         prj.subprojects {
             apply plugin: 'idea'
-            iprTask.dependsOn(ideaModule)
         }
         prj.allprojects { sp ->
             afterEvaluate {
                 idea {
                     module {
-                        def main = sourceSets.findByName('main')
-                        if (main != null) {
-                            outputDir = main.output.classesDir
-                        }
-                        def test = sourceSets.findByName('test')
-                        if (test != null) {
-                            testOutputDir = test.output.classesDir
+                        if (sp.hasProperty('sourceSets')) {
+                            def main = sp.sourceSets.findByName('main')
+                            if (main != null) {
+                                outputDir = main.output.classesDir
+                            }
+                            def test = sp.sourceSets.findByName('test')
+                            if (test != null) {
+                                testOutputDir = test.output.classesDir
+                            }
                         }
                         downloadSources = true
                         downloadJavadoc = true
