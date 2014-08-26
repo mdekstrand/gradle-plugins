@@ -4,9 +4,6 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        maven {
-            url 'http://elehack.net/maven/'
-        }
     }
 }
 
