@@ -53,6 +53,10 @@ class Pandoc extends SourceTask implements PandocSpec {
         document(null, src, config)
     }
 
+    void document(Object src) {
+        document(null, src, null)
+    }
+
     Doc lookupDocument(File source) {
         def doc = documents.find {
             project.file(it.input) == source
