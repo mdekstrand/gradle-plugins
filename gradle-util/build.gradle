@@ -4,8 +4,6 @@ ext.projectDescription = """
 A grab-bag of utilities for Gradle.
 """
 
-sourceCompatibility = '1.6'
-
 dependencies {
     compile 'org.eclipse.jgit:org.eclipse.jgit:3.4.1.201406201815-r'
 }
