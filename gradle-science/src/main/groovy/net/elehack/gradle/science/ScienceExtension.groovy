@@ -25,7 +25,7 @@ public class ScienceExtension {
 
     ScienceExtension(Project prj) {
         def prop = { String name, String dft ->
-            prj.hasProperty("science.$name") ? project.getProperty("science.$name") : dft
+            prj.hasProperty("science.$name") ? prj.getProperty("science.$name") : dft
         }
 
         pandoc = prop('pandoc', 'pandoc')
